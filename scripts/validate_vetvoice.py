@@ -501,6 +501,10 @@ def check_dosage_by_animal(
 
     Сравнивает vetprotocol/vetlek дозы по животным с vetvoice.animal_specific.
     """
+    # Вакцины — пропускаем (для них нет мг/кг)
+    if _is_vaccine(vv_drug):
+        return
+
     vv_animals = vv_drug.get("animals", []) or []
     vv_animal_specific = vv_drug.get("animal_specific", {}) or {}
     vv_dose_per_kg = vv_drug.get("dose_per_kg")
@@ -683,11 +687,27 @@ def check_dosage_by_animal(
                 ))
 
 
+def _is_vaccine(vv_drug: dict) -> bool:
+    """Препарат — вакцина? Не пытаемся валидировать мг/кг для неё."""
+    if vv_drug.get("form_type") == "vaccine":
+        return True
+    if "vaccine_specific" in vv_drug:
+        return True
+    cat = (vv_drug.get("category") or "").strip()
+    if cat == "Иммунобиологические":
+        return True
+    return False
+
+
 def check_dosage(
     vv_drug: dict, vp_drug: Optional[dict], vl_drug: Optional[dict],
     discrepancies: List[Discrepancy], drug_id: int, drug_name: str,
 ) -> None:
     """Проверить дозировки."""
+    # Вакцины — пропускаем проверку мг/кг
+    if _is_vaccine(vv_drug):
+        return
+
     vv_dose = vv_drug.get("dose_per_kg")
     vv_min = vv_drug.get("dose_min")
     vv_max = vv_drug.get("dose_max")

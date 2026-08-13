@@ -135,6 +135,31 @@ jobs:
             --export-md output/review.md \
             $AGGRESSIVE_FLAG
 
+      # ---------- 8.5. Vaccine Extractor — отдельная модель для вакцин ----------
+      - name: 💉 Extract vaccine_specific (отдельная модель для вакцин)
+        run: |
+          python3 scripts/vaccine_extractor.py \
+            --drugs-calc output/drugs_calc_fixed.json \
+            --fsvps output/fsvps.json \
+            --output output/drugs_calc_with_vaccines.json
+
+          # Заменяем fixed на версию с вакцинами
+          mv output/drugs_calc_with_vaccines.json output/drugs_calc_fixed.json
+
+          # Статистика
+          python3 -c "
+          import json
+          with open('output/drugs_calc_fixed.json') as f:
+              d = json.load(f)
+          vaccines = [x for x in d['drugs_calc'] if 'vaccine_specific' in x]
+          with_dose = sum(1 for v in vaccines if v['vaccine_specific'].get('single_dose_ml'))
+          with_vial = sum(1 for v in vaccines if v['vaccine_specific'].get('doses_per_vial'))
+          print(f'💉 Vaccines: {len(vaccines)}')
+          print(f'   with single_dose_ml: {with_dose}')
+          print(f'   with doses_per_vial:  {with_vial}')
+          print(f'   form_type=vaccine:    {sum(1 for x in d[\"drugs_calc\"] if x.get(\"form_type\")==\"vaccine\")}')
+          "
+
       # ---------- 9. Краткая сводка в логе ----------
       - name: 📊 Print summary
         run: |
