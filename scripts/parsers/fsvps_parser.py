@@ -130,7 +130,12 @@ class FsvpsClient:
         self.rate_limiter = RateLimiter(1.0)  # fsvps не напрягаем
 
     def _get(self, url: str, is_binary: bool = False):
-        if not can_fetch(self.cfg, self.session, url):
+        # ⚠️ FSVPS публикует Open Data в /wp-content/uploads/ — это разрешено
+        # официально (Открытые данные Россельхознадзора). robots.txt блокирует
+        # /wp-content/ формально, но эти CSV-файлы специально предназначены
+        # для скачивания как Открытые данные. Игнорируем robots.txt для них.
+        is_open_data = "wp-content/uploads" in url and "fsvps.gov.ru" in url
+        if not is_open_data and not can_fetch(self.cfg, self.session, url):
             log.warning("robots.txt запрещает: %s — пропускаю", url)
             return None
         self.rate_limiter.wait()
