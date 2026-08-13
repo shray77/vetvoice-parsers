@@ -1,0 +1,83 @@
+name: CI
+
+# Линтер + проверка импортов на каждый push/PR
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 pyyaml
+
+      - name: Flake8
+        run: |
+          # Останавливаем сборку при критических ошибках (E9, F63, F7, F82, F401)
+          # Игнорируем длину строк (E501) — в нашем коде длинные docstrings/JSON
+          flake8 scripts/ --count --select=E9,F63,F7,F82,F401 --show-source --statistics
+          # Предупреждения (не фейлят сборку)
+          flake8 scripts/ --count --exit-zero --max-line-length=120 --statistics
+
+      - name: Smoke test imports
+        run: |
+          python3 -c "
+          import sys
+          sys.path.insert(0, 'scripts')
+          sys.path.insert(0, 'scripts/parsers')
+          import config
+          import galen_parser
+          import vetprotocol_parser
+          import vetlek_parser
+          import vidal_parser
+          import reestrinform_parser
+          import validate_vetvoice
+          print('✅ All imports OK')
+          cfg = config.get_config()
+          print(f'✅ Config loaded: {len(cfg.global_config.user_agents)} User-Agents')
+          print(f'✅ vetprotocol delay: {cfg.vetprotocol.delay}s')
+          print(f'✅ vetlek delay: {cfg.vetlek.delay}s')
+          print(f'✅ validator animal_specific: {cfg.validator.animal_specific_enabled}')
+          "
+
+      - name: YAML syntax check
+        run: |
+          python3 -c "
+          import yaml
+          with open('config.yaml') as f:
+              cfg = yaml.safe_load(f)
+          required_sections = ['global', 'vetprotocol', 'vetlek', 'validator']
+          for s in required_sections:
+              assert s in cfg, f'Missing section: {s}'
+          print('✅ config.yaml valid')
+          print(f'   User-Agents configured: {len(cfg[\"global\"][\"user_agents\"])}')
+          "
+
+      - name: Validate YAML workflow files
+        run: |
+          python3 -c "
+          import yaml
+          from pathlib import Path
+          for yml in Path('.github/workflows').glob('*.yml'):
+              with open(yml) as f:
+                  yaml.safe_load(f)
+              print(f'✅ {yml} valid')
+          "

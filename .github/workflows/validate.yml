@@ -1,0 +1,160 @@
+name: Validate VetVoice Database
+
+# Автоматическая валидация базы препаратов vetvoice.
+# Запускается:
+#   * по расписанию (каждое воскресенье в 03:00 UTC)
+#   * по push в main (только если менялись scripts/ или config.yaml)
+#   * вручную через GitHub Actions UI (workflow_dispatch)
+
+on:
+  schedule:
+    # Каждое воскресенье в 03:00 UTC = 06:00 МСК
+    - cron: '0 3 * * 0'
+
+  workflow_dispatch:
+    inputs:
+      max_vetprotocol:
+        description: 'Лимит препаратов vetprotocol (434 = все)'
+        required: false
+        default: '434'
+        type: choice
+        options:
+          - '50'
+          - '100'
+          - '200'
+          - '434'
+      max_vetlek:
+        description: 'Лимит инструкций vetlek (1337 = все)'
+        required: false
+        default: '200'
+        type: choice
+        options:
+          - '50'
+          - '100'
+          - '200'
+          - '500'
+          - '1337'
+
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'config.yaml'
+      - '.github/workflows/validate.yml'
+
+permissions:
+  contents: read       # для клонирования vetvoice из GitLab
+  actions: read        # для чтения artifacts
+
+# Не запускать параллельно несколько пайплайнов
+concurrency:
+  group: vetvoice-validate
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      # ---------- 1. Checkout нашего репо ----------
+      - name: 📥 Checkout vetvoice-parsers
+        uses: actions/checkout@v4
+
+      # ---------- 2. Python ----------
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.txt
+
+      # ---------- 3. Зависимости ----------
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ---------- 4. Клонировать vetvoice из GitLab ----------
+      # Используем GitLab token из секретов (нужен для private репо).
+      # Если репо публичный — токен не обязателен, но мы его добавим для надёжности.
+      - name: 📥 Clone vetvoice repo (GitLab)
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [ -z "$GITLAB_TOKEN" ]; then
+            echo "⚠️ GITLAB_TOKEN не задан — пробую публичный клон"
+            git clone --depth 1 https://gitlab.com/shray77/vetvoice.git vetvoice_repo
+          else
+            git clone --depth 1 "https://oauth2:${GITLAB_TOKEN}@gitlab.com/shray77/vetvoice.git" vetvoice_repo
+          fi
+          ls -la vetvoice_repo/assets/data/drugs_calc.json
+          echo "DRUGS_CALC_SIZE=$(wc -c < vetvoice_repo/assets/data/drugs_calc.json)" >> $GITHUB_ENV
+
+      # ---------- 5. Подготовить директорию ----------
+      - name: 📁 Create output dir
+        run: mkdir -p output
+
+      # ---------- 6. Парсинг vetprotocol.ru ----------
+      - name: 🌐 Parse vetprotocol.ru
+        run: |
+          python3 scripts/parsers/vetprotocol_parser.py \
+            --fetch-all output/vetprotocol.json \
+            --max ${{ github.event.inputs.max_vetprotocol || '434' }}
+
+      # ---------- 7. Парсинг vetlek.ru ----------
+      - name: 🌐 Parse vetlek.ru
+        run: |
+          python3 scripts/parsers/vetlek_parser.py \
+            --fetch-all output/vetlek.json \
+            --max ${{ github.event.inputs.max_vetlek || '200' }}
+
+      # ---------- 8. Валидация ----------
+      - name: 🔍 Validate drugs_calc.json
+        run: |
+          python3 scripts/validate_vetvoice.py \
+            --drugs-calc vetvoice_repo/assets/data/drugs_calc.json \
+            --vetprotocol output/vetprotocol.json \
+            --vetlek output/vetlek.json \
+            --output output/validation_report.json \
+            --apply-fixes output/drugs_calc_fixed.json
+
+      # ---------- 9. Краткая сводка в логе ----------
+      - name: 📊 Print summary
+        run: |
+          echo "=== Validation summary ==="
+          python3 -c "
+          import json
+          with open('output/validation_report.json') as f:
+              r = json.load(f)
+          print(f\"Total drugs:        {r['total_drugs']}\")
+          print(f\"Matched:            {r['matched_drugs']}\")
+          print(f\"Discrepancies:      {r['discrepancies_count']}\")
+          print(f\"By severity:        {r['discrepancies_by_severity']}\")
+          print(f\"Fixed drugs:        {r['fixed_drugs']}\")
+          print()
+          print('Top 10 fields:')
+          for k, v in list(r['discrepancies_by_field'].items())[:10]:
+              print(f'  {k:40s}: {v}')
+          "
+
+      # ---------- 10. Загрузить артефакты ----------
+      - name: 📤 Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vetvoice-validation-${{ github.run_id }}
+          path: |
+            output/vetprotocol.json
+            output/vetlek.json
+            output/validation_report.json
+            output/drugs_calc_fixed.json
+          retention-days: 30
+          compression-level: 6
+
+      # ---------- 11. Уведомление в лог при ошибке ----------
+      - name: ❌ Report failure
+        if: failure()
+        run: |
+          echo "::error::Валидация vetvoice завершилась с ошибкой. Проверь логи."
+          echo "Артефакты (если есть) доступны в Actions → этот запуск."

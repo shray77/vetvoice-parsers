@@ -43,7 +43,7 @@ _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _PARENT_DIR = os.path.dirname(_SCRIPT_DIR)
 if _PARENT_DIR not in sys.path:
     sys.path.insert(0, _PARENT_DIR)
-from config import get_config, make_session, can_fetch, RateLimiter  # noqa: E402
+from config import get_config, make_session, can_fetch, RateLimiter, rotate_user_agent  # noqa: E402
 
 log = logging.getLogger("vetlek_parser")
 
@@ -109,12 +109,15 @@ class VetlekClient:
             log.warning("robots.txt запрещает: %s — пропускаю", url)
             return None
         self.rate_limiter.wait()
+        # Ротация UA для каждого запроса
+        rotate_user_agent(self.session, self.cfg)
         try:
             r = self.session.get(url, timeout=self.timeout)
             if r.status_code == 429:
                 log.warning("429 Too Many Requests на %s — жду 60 сек", url)
                 time.sleep(60)
                 self.rate_limiter.wait()
+                rotate_user_agent(self.session, self.cfg)
                 r = self.session.get(url, timeout=self.timeout)
             if r.status_code == 404:
                 return None

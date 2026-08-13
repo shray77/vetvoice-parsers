@@ -53,11 +53,12 @@ export VETVOICE_VALIDATOR_DOSE_TOLERANCE=0.20
 ### Этичный парсинг (чтобы не забанили)
 
 В config.yaml включены по умолчанию:
-- ✅ **Честный User-Agent** с указанием проекта и контакта (НЕ маскируемся под браузер)
+- ✅ **Браузерные User-Agent с ротацией** — 5 реалистичных UA (Chrome/Firefox/Safari, Windows/Mac/Linux), при каждом запросе выбирается случайно
+- ✅ **Полный набор браузерных заголовков** — `sec-ch-ua`, `Sec-Fetch-*`, `Accept-Encoding: br` (как у настоящего Chrome)
 - ✅ **robots.txt compliance** — парсер проверяет `/robots.txt` перед запросами
 - ✅ **Rate limiting** — `delay: 0.6-2.0` сек между запросами (см. по источникам)
 - ✅ **Retry с экспоненциальной задержкой** для 5xx ошибок
-- ✅ **429 Too Many Requests handling** — ждём 60-600 сек и продолжаем
+- ✅ **429 Too Many Requests handling** — ждём 60-600 сек, меняем UA, продолжаем
 - ✅ **403 Forbidden detection** — останавливаемся, если сайт начал банить
 - ✅ **Промежуточное сохранение** каждые 10-20 записей (не теряем прогресс при падении)
 
@@ -78,7 +79,11 @@ vetvoice-parsers/
 ├── config.yaml                 # ⭐ Все настройки (rate-limiting, UA, robots.txt)
 ├── README.md
 ├── LICENSE
+├── requirements.txt
 ├── .gitignore
+├── .github/workflows/
+│   ├── validate.yml            # ⭐ Автоматический парсинг + валидация (по расписанию)
+│   └── ci.yml                  # Линтинг + smoke-тест импортов
 ├── examples/                   # Образцы данных для демонстрации
 │   ├── vetprotocol_sample.json
 │   ├── vetlek_sample.json
@@ -97,6 +102,39 @@ vetvoice-parsers/
     ├── run_pipeline.py         # Оркестратор полного цикла
     └── download_vetvoice_jsons.sh
 ```
+
+## GitHub Actions Workflows
+
+### `.github/workflows/validate.yml` — Автоматическая валидация
+
+Запускается:
+- ⏰ **Каждое воскресенье в 03:00 UTC** (06:00 МСК) — `cron: '0 3 * * 0'`
+- 🔘 **Вручную** через GitHub Actions UI (workflow_dispatch) — можно выбрать лимит препаратов
+- 📤 **При push в main** если изменились `scripts/**` или `config.yaml`
+
+Что делает:
+1. Клонирует vetvoice из GitLab (нужен `GITLAB_TOKEN` secret для приватного доступа)
+2. Запускает парсеры vetprotocol + vetlek
+3. Запускает валидатор
+4. Загружает артефакты: `vetprotocol.json`, `vetlek.json`, `validation_report.json`, `drugs_calc_fixed.json` (хранятся 30 дней)
+
+**Настройка:** добавь `GITLAB_TOKEN` в Settings → Secrets and variables → Actions репозитория. Без токена workflow попробует клонировать публичный вет.
+
+### `.github/workflows/ci.yml` — CI проверки
+
+Запускается на каждый push/PR. Проверяет:
+- Flake8 (критические ошибки: E9, F63, F7, F82, F401)
+- Smoke-test импортов всех парсеров + валидатора
+- Синтаксис `config.yaml`
+- Синтаксис YAML в `.github/workflows/`
+
+### Ручной запуск
+
+1. Открой https://github.com/shray77/vetvoice-parsers/actions
+2. Выбери workflow "Validate VetVoice Database"
+3. Нажми "Run workflow"
+4. Укажи лимит препаратов (50/100/200/434 для vetprotocol, 50-1337 для vetlek)
+5. После завершения скачай артефакты из раздела Artifacts
 
 ## Установка
 

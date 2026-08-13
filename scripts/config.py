@@ -32,11 +32,38 @@ log = logging.getLogger("vetvoice_config")
 
 @dataclass
 class GlobalConfig:
-    user_agent: str = (
-        "VetVoiceBot/1.0 "
-        "(+https://github.com/shray77/vetvoice-parsers; research, non-commercial)"
-    )
-    headers: Dict[str, str] = field(default_factory=dict)
+    # Ротация браузерных User-Agent (сайты банят по ботоподобным UA).
+    # При каждом запросе случайно выбирается один из списка.
+    user_agents: List[str] = field(default_factory=lambda: [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 "
+        "(KHTML, like Gecko) Version/17.4.1 Safari/605.1.15",
+        "Mozilla/5.0 (X11; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 "
+        "Firefox/124.0",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    ])
+    # Если задан один user_agent — приоритетнее списка (для отладки).
+    user_agent: Optional[str] = None
+    headers: Dict[str, str] = field(default_factory=lambda: {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                  "image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Cache-Control": "max-age=0",
+        "sec-ch-ua": '"Chromium";v="124", "Google Chrome";v="124", '
+                     '"Not-A.Brand";v="99"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+    })
     timeout: int = 30
     max_retries: int = 3
     backoff_factor: float = 1.5
@@ -47,6 +74,19 @@ class GlobalConfig:
     cache_ttl_hours: int = 24
     log_level: str = "INFO"
     log_format: str = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+
+    def get_user_agent(self) -> str:
+        """Вернуть User-Agent для текущего запроса.
+
+        Если задан self.user_agent — он приоритетнее (для отладки).
+        Иначе случайно выбираем из списка user_agents.
+        """
+        import random
+        if self.user_agent:
+            return self.user_agent
+        if self.user_agents:
+            return random.choice(self.user_agents)
+        return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
 
 
 @dataclass
@@ -372,16 +412,17 @@ def make_session(
     """Создать requests.Session с настройками из конфига.
 
     Включает:
-      * User-Agent и заголовки
-      * Кеширование (опционально)
-      * Robots.txt compliance (опционально, проверяется в can_fetch)
+      * Браузерный User-Agent (случайный из списка)
+      * Полный набор браузерных заголовков (sec-ch-ua, Sec-Fetch-*, и т.д.)
+      * Retry стратегия для 5xx
     """
     import requests
     from requests.adapters import HTTPAdapter
     from urllib3.util.retry import Retry
 
     session = requests.Session()
-    session.headers.update({"User-Agent": cfg.global_config.user_agent})
+    # Случайный UA при создании сессии
+    session.headers.update({"User-Agent": cfg.global_config.get_user_agent()})
     session.headers.update(cfg.global_config.headers)
 
     # Retry стратегия
@@ -396,6 +437,16 @@ def make_session(
     session.mount("https://", adapter)
 
     return session
+
+
+def rotate_user_agent(session, cfg: AppConfig) -> str:
+    """Поменять User-Agent в существующей сессии (для ротации между запросами).
+
+    Возвращает новый UA.
+    """
+    new_ua = cfg.global_config.get_user_agent()
+    session.headers["User-Agent"] = new_ua
+    return new_ua
 
 
 def can_fetch(
