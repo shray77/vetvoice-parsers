@@ -447,9 +447,12 @@ def fetch_all_directions(
     import json
 
     client = VetlekClient()
+    sample_ua = client.cfg.global_config.get_user_agent()
     log.info(
-        "Начинаем выгрузку инструкций с vetlek.ru (delay=%.2fs, UA=%s)",
-        client.delay, client.cfg.global_config.user_agent[:60],
+        "Начинаем выгрузку инструкций с vetlek.ru (delay=%.2fs, UA pool: %d UAs, sample: %s)",
+        client.delay,
+        len(client.cfg.global_config.user_agents),
+        sample_ua[:60],
     )
     items = []
     for instr in client.iter_all_directions(max_directions=max_directions):

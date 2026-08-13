@@ -510,9 +510,12 @@ def fetch_all_drugs(
 
     client = VetprotocolClient()
     cfg = client.cfg.vetprotocol
+    sample_ua = client.cfg.global_config.get_user_agent()
     log.info(
-        "Начинаем выгрузку препаратов с vetprotocol.ru (delay=%.2fs, UA=%s)",
-        client.delay, client.cfg.global_config.user_agent[:60],
+        "Начинаем выгрузку препаратов с vetprotocol.ru (delay=%.2fs, UA pool: %d UAs, sample: %s)",
+        client.delay,
+        len(client.cfg.global_config.user_agents),
+        sample_ua[:60],
     )
     drugs = []
     for drug in client.iter_all_drugs(max_drugs=max_drugs):

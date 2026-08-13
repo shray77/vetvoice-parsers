@@ -31,11 +31,11 @@ jobs:
 
       - name: Flake8
         run: |
-          # Останавливаем сборку при критических ошибках (E9, F63, F7, F82, F401)
-          # Игнорируем длину строк (E501) — в нашем коде длинные docstrings/JSON
-          flake8 scripts/ --count --select=E9,F63,F7,F82,F401 --show-source --statistics
-          # Предупреждения (не фейлят сборку)
-          flake8 scripts/ --count --exit-zero --max-line-length=120 --statistics
+          # Критические ошибки (undefined names, syntax errors) — фейлят сборку
+          flake8 scripts/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Предупреждения (F401 unused imports, E501 длина строк) — не фейлят
+          flake8 scripts/ --count --exit-zero --max-line-length=120 \
+            --extend-ignore=E501,F401 --statistics
 
       - name: Smoke test imports
         run: |

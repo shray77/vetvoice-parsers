@@ -408,13 +408,15 @@ class RobotsTxtCache:
 def make_session(
     cfg: AppConfig,
     source_name: str = "",
-) -> "requests.Session":
+):
     """Создать requests.Session с настройками из конфига.
 
     Включает:
       * Браузерный User-Agent (случайный из списка)
       * Полный набор браузерных заголовков (sec-ch-ua, Sec-Fetch-*, и т.д.)
       * Retry стратегия для 5xx
+
+    Возвращает requests.Session.
     """
     import requests
     from requests.adapters import HTTPAdapter
