@@ -138,6 +138,47 @@ jobs:
               print(f'  {k:40s}: {v}')
           "
 
+      # ---------- 9.5. Анализ unmatched препаратов ----------
+      - name: 📊 Print unmatched analysis
+        run: |
+          echo "=== Unmatched drugs analysis ==="
+          python3 << 'PYEOF'
+          import json, sys
+          sys.path.insert(0, 'scripts')
+          import validate_vetvoice as v
+
+          with open('vetvoice_repo/assets/data/drugs_calc.json') as f:
+              vv = json.load(f)
+          with open('output/vetprotocol.json') as f:
+              vp = json.load(f)
+          with open('output/vetlek.json') as f:
+              vl = json.load(f)
+
+          vp_idx = v.build_vetprotocol_index(vp.get('drugs', []))
+          vl_idx = v.build_vetlek_index(vl.get('directions', []))
+
+          matched = 0
+          unmatched_by_cat = {}
+          for drug in vv['drugs_calc']:
+              if v.find_in_vetprotocol(drug, vp_idx) or v.find_in_vetlek(drug, vl_idx):
+                  matched += 1
+              else:
+                  cat = (drug.get('category') or 'Без категории')[:50]
+                  unmatched_by_cat[cat] = unmatched_by_cat.get(cat, 0) + 1
+
+          total = len(vv['drugs_calc'])
+          print(f"Matched:   {matched} / {total} ({matched*100/total:.1f}%)")
+          print(f"Unmatched: {total - matched}")
+          print()
+          print("Причины unmatched (по категориям):")
+          print("  Главные из них — иммунобиологические (вакцины, сыворотки),")
+          print("  которые vetprotocol/vetlek не покрывают (это не лекарства).")
+          print()
+          print("ТОП-10 категорий unmatched:")
+          for cat, n in sorted(unmatched_by_cat.items(), key=lambda x: -x[1])[:10]:
+              print(f"  {n:4d}  {cat}")
+          PYEOF
+
       # ---------- 10. Загрузить артефакты ----------
       - name: 📤 Upload artifacts
         if: always()

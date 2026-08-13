@@ -250,13 +250,14 @@ def find_in_vetlek(
 def _is_realistic_dose(value: float) -> bool:
     """Проверить, что доза (мг/кг) находится в реалистичном диапазоне.
 
-    Большинство ветпрепаратов имеют дозу 0.001–100 мг/кг.
-    Значения > 100 мг/кг — это, как правило, парсинг «N мг» без /кг
-    (то есть разовая доза, а не на кг веса).
+    Большинство ветпрепаратов имеют дозу 0.001–50 мг/кг.
+    Значения > 50 мг/кг — подозрительные (часто это разовая доза в мг,
+    а не мг/кг). Жёсткий предел > 80 мг/кг считаем нереалистичным
+    и не применяем как fix.
     """
     if value is None or value <= 0:
         return False
-    return 0.001 <= value <= 100.0
+    return 0.001 <= value <= 80.0
 
 
 # ---------------------------------------------------------------------------
@@ -1129,7 +1130,13 @@ def main():
         severity = tuple(s.strip() for s in args.severity.split(","))
         n = apply_fixes(args.drugs_calc, report, args.apply_fixes, severity)
         print(f"Применено исправлений: {n}")
+        print(f"Исправлено препаратов: {report.fixed_drugs}")
         print(f"Исправленный файл:    {args.apply_fixes}")
+        # Пересохраняем отчёт — теперь с правильным fixed_drugs
+        with open(args.output, "w", encoding="utf-8") as f:
+            json.dump(report.to_dict(), f, ensure_ascii=False, indent=2)
+        log.info("Отчёт обновлён (fixed_drugs=%d) и сохранён в %s",
+                 report.fixed_drugs, args.output)
 
 
 if __name__ == "__main__":
