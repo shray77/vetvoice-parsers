@@ -457,15 +457,26 @@ def can_fetch(
     url: str,
     user_agent: Optional[str] = None,
 ) -> bool:
-    """Проверить, разрешён ли URL согласно robots.txt."""
+    """Проверить, разрешён ли URL согласно robots.txt.
+
+    Если robots.txt недоступен — считаем что всё разрешено.
+    Если user_agent None/пустой — используем '*' (any bot).
+    """
     if not cfg.global_config.respect_robots_txt:
         return True
     from urllib.parse import urlparse
     parsed = urlparse(url)
     base_url = f"{parsed.scheme}://{parsed.netloc}"
     parser = RobotsTxtCache.get(base_url, session)
-    ua = user_agent or cfg.global_config.user_agent
-    return parser.can_fetch(ua, url)
+    # Получаем UA — не None (RobotFileParser падает на None)
+    ua = user_agent or cfg.global_config.get_user_agent() or "*"
+    if not ua:
+        ua = "*"
+    try:
+        return parser.can_fetch(ua, url)
+    except Exception as e:
+        log.warning("robots.txt check failed for %s: %s — allowing", url, e)
+        return True
 
 
 # ---------------------------------------------------------------------------
