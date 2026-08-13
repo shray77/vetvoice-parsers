@@ -972,7 +972,9 @@ def apply_fixes(
                     drug["withdrawal_days"] = d.suggested_fix
                     changed = True
         elif len(field_path) == 2 and field_path[0] == "contraindications":
-            if not drug.get("contraindications"):
+            if not drug.get("contraindications") or not isinstance(
+                drug.get("contraindications"), dict
+            ):
                 drug["contraindications"] = {
                     "warnings": [],
                     "pregnancy": False,
@@ -981,6 +983,24 @@ def apply_fixes(
                     "old": False,
                 }
             c = drug["contraindications"]
+            # Нормализуем warnings в список (в исходных данных бывает строка)
+            w = c.get("warnings")
+            if isinstance(w, str):
+                # Попытка распарсить как JSON-сериализованный список
+                import json as _json
+                try:
+                    parsed = _json.loads(w.replace("'", '"'))
+                    if isinstance(parsed, list):
+                        c["warnings"] = [str(x) for x in parsed]
+                    else:
+                        c["warnings"] = [w] if w else []
+                except Exception:
+                    # Не JSON — кладём всю строку как один элемент
+                    c["warnings"] = [w] if w else []
+            elif w is None:
+                c["warnings"] = []
+            elif not isinstance(w, list):
+                c["warnings"] = [str(w)]
             sub = field_path[1]
             if sub in ("pregnancy", "lactation", "young", "old"):
                 if not c.get(sub):
