@@ -1,0 +1,729 @@
+"""
+Валидатор базы препаратов vetvoice (drugs_calc.json).
+
+Сравнивает данные vetvoice с данными из открытых источников:
+  * vetprotocol.ru (по МНН)
+  * vetlek.ru (по торговому наименования)
+  * vidal.ru/veterinar
+  * galen.vetrf.ru (если есть API-ключ)
+
+Проверяет:
+  1. Дозировки: доза (мг/кг), частота, путь введения, курс
+  2. Побочные действия: список побочек
+  3. Противопоказания: беременность, лактация, возраст
+  4. Лекарственная форма и концентрация
+  5. Соответствие МНН
+
+Формирует отчёт о расхождениях и предлагает исправления.
+
+Использование:
+    python validate_vetvoice.py --drugs-calc /path/to/drugs_calc.json \
+                                 --vetprotocol /path/to/vetprotocol.json \
+                                 --vetlek /path/to/vetlek.json \
+                                 --output /path/to/report.json \
+                                 --apply-fixes /path/to/drugs_calc_fixed.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+import re
+import sys
+from dataclasses import dataclass, field, asdict
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+log = logging.getLogger("vetvoice_validator")
+if not log.handlers:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+
+# ---------------------------------------------------------------------------
+# Модели результатов валидации
+# ---------------------------------------------------------------------------
+
+@dataclass
+class Discrepancy:
+    """Одно найденное расхождение."""
+    drug_id: int = 0
+    drug_name: str = ""
+    field: str = ""  # dose_per_kg, frequency, side_effects, ...
+    vetvoice_value: Any = None
+    source_value: Any = None
+    source: str = ""  # vetprotocol / vetlek / vidal / galen
+    severity: str = "info"  # info / warning / error
+    suggested_fix: Any = None
+    notes: str = ""
+
+
+@dataclass
+class ValidationReport:
+    """Полный отчёт по валидации."""
+    total_drugs: int = 0
+    checked_drugs: int = 0
+    matched_drugs: int = 0
+    discrepancies: List[Discrepancy] = field(default_factory=list)
+    fixed_drugs: int = 0
+    sources_used: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return {
+            "total_drugs": self.total_drugs,
+            "checked_drugs": self.checked_drugs,
+            "matched_drugs": self.matched_drugs,
+            "discrepancies_count": len(self.discrepancies),
+            "fixed_drugs": self.fixed_drugs,
+            "sources_used": self.sources_used,
+            "discrepancies_by_severity": {
+                s: sum(1 for d in self.discrepancies if d.severity == s)
+                for s in ("info", "warning", "error")
+            },
+            "discrepancies_by_field": _count_by_field(self.discrepancies),
+            "discrepancies": [d.to_dict() if hasattr(d, 'to_dict') else asdict(d)
+                              for d in self.discrepancies],
+        }
+
+
+def _count_by_field(discrepancies: List[Discrepancy]) -> Dict[str, int]:
+    counts: Dict[str, int] = {}
+    for d in discrepancies:
+        counts[d.field] = counts.get(d.field, 0) + 1
+    return dict(sorted(counts.items(), key=lambda x: -x[1]))
+
+
+#monkey-patch to_dict if not present
+def _discrepancy_to_dict(self) -> dict:
+    return asdict(self)
+Discrepancy.to_dict = _discrepancy_to_dict
+
+
+# ---------------------------------------------------------------------------
+# Утилиты для нормализации строк
+# ---------------------------------------------------------------------------
+
+_PUNCT_RE = re.compile(r"[^\w\s%/-]", re.U)
+_WS_RE = re.compile(r"\s+", re.U)
+_DOSE_NUM_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(мг|мл|мкг|МЕ|г)\s*/\s*(кг|м²|м2)?", re.I)
+
+
+def normalize_str(s: Any) -> str:
+    """Привести строку к каноничному виду для сравнения."""
+    if s is None:
+        return ""
+    s = str(s).lower().strip()
+    s = _PUNCT_RE.sub(" ", s)
+    s = _WS_RE.sub(" ", s).strip()
+    return s
+
+
+def normalize_name(s: str) -> str:
+    """Нормализовать название препарата для матчинга."""
+    s = normalize_str(s)
+    # удалить символ «®» и всякие специальные знаки
+    s = re.sub(r"[®™]", "", s)
+    # удалить общие слова
+    for w in ("раствор", "суспензия", "таблетки", "порошок", "гель",
+              "мазь", "капли", "инъекций", "для", "применения"):
+        s = re.sub(rf"\b{w}\b", "", s)
+    s = _WS_RE.sub(" ", s).strip()
+    return s
+
+
+def extract_dose_numbers(text: str) -> List[float]:
+    """Извлечь все числовые значения доз из текста."""
+    if not text:
+        return []
+    nums = []
+    for m in _DOSE_NUM_RE.finditer(text.lower()):
+        try:
+            nums.append(float(m.group(1).replace(",", ".")))
+        except ValueError:
+            pass
+    return nums
+
+
+def dose_values_close(a: Optional[float], b: Optional[float],
+                      tolerance: float = 0.2) -> bool:
+    """Сравнить две дозы с допуском (20% по умолчанию)."""
+    if a is None or b is None:
+        return False
+    if a == 0 and b == 0:
+        return True
+    if a == 0 or b == 0:
+        return False
+    ratio = abs(a - b) / max(a, b)
+    return ratio <= tolerance
+
+
+# ---------------------------------------------------------------------------
+# Сопоставление препаратов vetvoice с источниками
+# ---------------------------------------------------------------------------
+
+def build_vetprotocol_index(data: List[dict]) -> Dict[str, dict]:
+    """Индекс препаратов vetprotocol по МНН и slug."""
+    idx: Dict[str, dict] = {}
+    for d in data:
+        if not d.get("name"):
+            continue
+        # по МНН (нормализованное имя)
+        key = normalize_name(d["name"])
+        if key:
+            idx[key] = d
+        # по синонимам
+        for syn in d.get("synonyms", []):
+            k = normalize_name(syn)
+            if k:
+                idx.setdefault(k, d)
+        # по slug
+        if d.get("slug"):
+            idx[f"slug:{d['slug']}"] = d
+    return idx
+
+
+def build_vetlek_index(data: List[dict]) -> Dict[str, dict]:
+    """Индекс инструкций vetlek по нормализованному названию."""
+    idx: Dict[str, dict] = {}
+    for d in data:
+        if not d.get("title"):
+            continue
+        key = normalize_name(d["title"])
+        if key:
+            idx[key] = d
+        # по ID
+        if d.get("direction_id"):
+            idx[f"id:{d['direction_id']}"] = d
+    return idx
+
+
+def find_in_vetprotocol(
+    vv_drug: dict, idx: Dict[str, dict]
+) -> Optional[dict]:
+    """Найти соответствие в vetprotocol по МНН или торговому наименованию."""
+    candidates = []
+    if vv_drug.get("inn"):
+        candidates.append(vv_drug["inn"])
+    if vv_drug.get("name"):
+        candidates.append(vv_drug["name"])
+
+    for cand in candidates:
+        key = normalize_name(cand)
+        if key in idx:
+            return idx[key]
+        # fuzzy: попробовать подстроку
+        for k, v in idx.items():
+            if k.startswith("slug:") or k.startswith("id:"):
+                continue
+            if key and (key in k or k in key) and len(key) > 3:
+                return v
+    return None
+
+
+def find_in_vetlek(
+    vv_drug: dict, idx: Dict[str, dict]
+) -> Optional[dict]:
+    """Найти соответствие в vetlek по названию."""
+    candidates = []
+    if vv_drug.get("name"):
+        candidates.append(vv_drug["name"])
+    if vv_drug.get("inn"):
+        candidates.append(vv_drug["inn"])
+
+    for cand in candidates:
+        key = normalize_name(cand)
+        if key in idx:
+            return idx[key]
+        # fuzzy
+        for k, v in idx.items():
+            if k.startswith("id:"):
+                continue
+            if key and (key in k or k in key) and len(key) > 4:
+                return v
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Проверка отдельных полей
+# ---------------------------------------------------------------------------
+
+def _is_realistic_dose(value: float) -> bool:
+    """Проверить, что доза (мг/кг) находится в реалистичном диапазоне.
+
+    Большинство ветпрепаратов имеют дозу 0.001–100 мг/кг.
+    Значения > 100 мг/кг — это, как правило, парсинг «N мг» без /кг
+    (то есть разовая доза, а не на кг веса).
+    """
+    if value is None or value <= 0:
+        return False
+    return 0.001 <= value <= 100.0
+
+
+def check_dosage(
+    vv_drug: dict, vp_drug: Optional[dict], vl_drug: Optional[dict],
+    discrepancies: List[Discrepancy], drug_id: int, drug_name: str,
+) -> None:
+    """Проверить дозировки."""
+    vv_dose = vv_drug.get("dose_per_kg")
+    vv_min = vv_drug.get("dose_min")
+    vv_max = vv_drug.get("dose_max")
+    vv_unit = vv_drug.get("dose_unit", "")
+
+    # vetprotocol: есть список doses с dose_per_kg
+    if vp_drug:
+        for vp_d in vp_drug.get("doses", []):
+            vp_dose = vp_d.get("dose_per_kg")
+            vp_unit = vp_d.get("dose_unit", "")
+            if vp_dose is None:
+                continue
+            # Проверяем реалистичность: если доза > 100 мг/кг, скорее всего
+            # это разовая доза (мг), а не на кг — пропускаем как fix
+            is_realistic = _is_realistic_dose(vp_dose)
+            # И если unit не содержит /кг, тоже пропускаем fix
+            unit_has_per_kg = "/" in vp_unit and "кг" in vp_unit
+
+            # Если в vetvoice нет дозы, но vetprotocol её знает — warning
+            if vv_dose in (None, 0) and vp_dose:
+                # Применяем только если доза реалистична и unit = мг/кг
+                if is_realistic and unit_has_per_kg:
+                    severity = "warning"
+                    suggested = vp_dose
+                else:
+                    severity = "info"
+                    suggested = None  # не применяем
+                discrepancies.append(Discrepancy(
+                    drug_id=drug_id, drug_name=drug_name,
+                    field="dose_per_kg",
+                    vetvoice_value=vv_dose,
+                    source_value=vp_dose,
+                    source="vetprotocol",
+                    severity=severity,
+                    suggested_fix=suggested,
+                    notes=f"vetprotocol указывает дозу {vp_dose} "
+                          f"{vp_unit} для "
+                          f"{vp_d.get('animal', '?')}"
+                          + ("" if is_realistic else " (нереалистичная, не применяем)"),
+                ))
+                break
+            # Если дозы значительно различаются
+            if vv_dose and not dose_values_close(vv_dose, vp_dose, 0.3):
+                discrepancies.append(Discrepancy(
+                    drug_id=drug_id, drug_name=drug_name,
+                    field="dose_per_kg",
+                    vetvoice_value=vv_dose,
+                    source_value=vp_dose,
+                    source="vetprotocol",
+                    severity="info" if not is_realistic else "warning",
+                    suggested_fix=None,  # не перезаписываем существующее
+                    notes=f"Расхождение в дозе: vetvoice={vv_dose}, "
+                          f"vetprotocol={vp_dose} для "
+                          f"{vp_d.get('animal', '?')} — требуется ручная проверка",
+                ))
+                break
+
+    # vetlek: ищем числа в тексте dosage
+    if vl_drug and vl_drug.get("dosage"):
+        vl_doses = extract_dose_numbers(vl_drug["dosage"])
+        if vl_doses and vv_dose in (None, 0):
+            # Берём только реалистичные дозы (≤ 100 мг/кг)
+            realistic = [d for d in vl_doses if _is_realistic_dose(d)]
+            if realistic:
+                suggested = max(realistic)
+                severity = "warning"
+            else:
+                suggested = None
+                severity = "info"
+            discrepancies.append(Discrepancy(
+                drug_id=drug_id, drug_name=drug_name,
+                field="dose_per_kg",
+                vetvoice_value=vv_dose,
+                source_value=max(vl_doses) if vl_doses else None,
+                source="vetlek",
+                severity=severity,
+                suggested_fix=suggested,
+                notes=f"vetlek указывает дозу: {vl_drug['dosage'][:200]}",
+            ))
+
+
+def check_side_effects(
+    vv_drug: dict, vp_drug: Optional[dict], vl_drug: Optional[dict],
+    discrepancies: List[Discrepancy], drug_id: int, drug_name: str,
+) -> None:
+    """Проверить побочные действия."""
+    vv_se = vv_drug.get("side_effects", []) or []
+
+    # vetprotocol: warnings часто содержат побочки
+    if vp_drug:
+        vp_warnings = vp_drug.get("warnings", []) or []
+        vp_all = vp_warnings
+        # Ищем слова «побочн» / «возможны» / «может вызывать»
+        vp_side_effects = [
+            w for w in vp_all
+            if re.search(r"(?i)побочн|возможны|может вызывать|вызывает",
+                         w)
+        ]
+        if vp_side_effects and not vv_se:
+            discrepancies.append(Discrepancy(
+                drug_id=drug_id, drug_name=drug_name,
+                field="side_effects",
+                vetvoice_value=vv_se,
+                source_value=vp_side_effects,
+                source="vetprotocol",
+                severity="warning",
+                suggested_fix=vp_side_effects[:5],
+                notes="vetvoice не указывает побочные действия, "
+                      "vetprotocol их перечисляет",
+            ))
+
+    # vetlek: секция side_effects
+    if vl_drug and vl_drug.get("side_effects"):
+        vl_se = vl_drug["side_effects"]
+        if len(vl_se) > 100 and not vv_se:
+            # Извлечь ключевые фразы
+            sentences = re.split(r"(?<=[.;])\s+", vl_se)
+            sentences = [s.strip() for s in sentences if s.strip()][:5]
+            discrepancies.append(Discrepancy(
+                drug_id=drug_id, drug_name=drug_name,
+                field="side_effects",
+                vetvoice_value=vv_se,
+                source_value=sentences,
+                source="vetlek",
+                severity="warning",
+                suggested_fix=sentences,
+                notes="vetlek описывает побочные действия, "
+                      "vetvoice — нет",
+            ))
+
+
+def check_contraindications(
+    vv_drug: dict, vp_drug: Optional[dict], vl_drug: Optional[dict],
+    discrepancies: List[Discrepancy], drug_id: int, drug_name: str,
+) -> None:
+    """Проверить противопоказания (беременность, лактация)."""
+    vv_c = vv_drug.get("contraindications", {}) or {}
+    vv_pregnancy = vv_c.get("pregnancy", False)
+    vv_lactation = vv_c.get("lactation", False)
+
+    # vetlek: секция contraindications
+    if vl_drug and vl_drug.get("contraindications"):
+        text = vl_drug["contraindications"].lower()
+        # если vetlek явно говорит про беременность/лактацию
+        if "беремен" in text or "стельн" in text or "сукотн" in text:
+            if not vv_pregnancy:
+                # проверим, что это действительно противопоказание
+                if re.search(r"(?i)противопоказан.*беремен|беремен.*противопоказан|"
+                             r"запрещ.*беремен|беремен.*запрещ", text):
+                    discrepancies.append(Discrepancy(
+                        drug_id=drug_id, drug_name=drug_name,
+                        field="contraindications.pregnancy",
+                        vetvoice_value=vv_pregnancy,
+                        source_value=True,
+                        source="vetlek",
+                        severity="error",
+                        suggested_fix=True,
+                        notes="vetlek прямо указывает противопоказание при "
+                              "беременности, vetvoice — нет",
+                    ))
+        if "лактаци" in text or "лактин" in text:
+            if not vv_lactation:
+                if re.search(r"(?i)противопоказан.*лактаци|лактаци.*противопоказан|"
+                             r"запрещ.*лактаци|лактаци.*запрещ", text):
+                    discrepancies.append(Discrepancy(
+                        drug_id=drug_id, drug_name=drug_name,
+                        field="contraindications.lactation",
+                        vetvoice_value=vv_lactation,
+                        source_value=True,
+                        source="vetlek",
+                        severity="error",
+                        suggested_fix=True,
+                        notes="vetlek прямо указывает противопоказание при "
+                              "лактации, vetvoice — нет",
+                    ))
+
+    # vetprotocol: warnings могут содержать упоминания беременности
+    if vp_drug:
+        for w in vp_drug.get("warnings", []):
+            wl = w.lower()
+            if ("беремен" in wl or "стельн" in wl or "сукотн" in wl) \
+                    and not vv_pregnancy:
+                if re.search(r"(?i)противопоказан|запрещ|не\s+примен", w):
+                    discrepancies.append(Discrepancy(
+                        drug_id=drug_id, drug_name=drug_name,
+                        field="contraindications.pregnancy",
+                        vetvoice_value=vv_pregnancy,
+                        source_value=True,
+                        source="vetprotocol",
+                        severity="warning",
+                        suggested_fix=True,
+                        notes=f"vetprotocol предупреждает: {w[:200]}",
+                    ))
+                    break
+
+
+def check_withdrawal(
+    vv_drug: dict, vl_drug: Optional[dict],
+    discrepancies: List[Discrepancy], drug_id: int, drug_name: str,
+) -> None:
+    """Проверить каренцию (withdrawal days)."""
+    vv_wd = vv_drug.get("withdrawal_days")
+    if vv_wd in (None, 0) and vl_drug and vl_drug.get("special_notes"):
+        text = vl_drug["special_notes"].lower()
+        # Ищем «убой на мясо разрешается не ранее чем через N дней»
+        m = re.search(
+            r"(?i)(?:убой|забой).{0,40}?не\s*ранее.{0,20}?через\s+(\d+)\s+(дн|сут)",
+            text,
+        )
+        if m:
+            suggested = int(m.group(1))
+            discrepancies.append(Discrepancy(
+                drug_id=drug_id, drug_name=drug_name,
+                field="withdrawal_days",
+                vetvoice_value=vv_wd,
+                source_value=suggested,
+                source="vetlek",
+                severity="warning",
+                suggested_fix=suggested,
+                notes=f"vetlek указывает каренцию {suggested} дней",
+            ))
+
+
+# ---------------------------------------------------------------------------
+# Главный цикл валидации
+# ---------------------------------------------------------------------------
+
+def validate(
+    drugs_calc_path: str,
+    vetprotocol_path: Optional[str] = None,
+    vetlek_path: Optional[str] = None,
+    vidal_path: Optional[str] = None,
+    galen_path: Optional[str] = None,
+) -> ValidationReport:
+    """Провалидировать drugs_calc.json по источникам."""
+    report = ValidationReport()
+
+    # Загрузить vetvoice
+    with open(drugs_calc_path, "r", encoding="utf-8") as f:
+        vv_data = json.load(f)
+    vv_drugs = vv_data.get("drugs_calc", [])
+    report.total_drugs = len(vv_drugs)
+    log.info("Загружено %d препаратов vetvoice", report.total_drugs)
+
+    # Загрузить источники
+    vp_idx, vl_idx = {}, {}
+    if vetprotocol_path:
+        with open(vetprotocol_path, "r", encoding="utf-8") as f:
+            vp_data = json.load(f)
+        vp_idx = build_vetprotocol_index(vp_data.get("drugs", []))
+        report.sources_used.append(f"vetprotocol ({len(vp_idx)} записей)")
+        log.info("vetprotocol: %d препаратов", len(vp_data.get("drugs", [])))
+    if vetlek_path:
+        with open(vetlek_path, "r", encoding="utf-8") as f:
+            vl_data = json.load(f)
+        vl_idx = build_vetlek_index(vl_data.get("directions", []))
+        report.sources_used.append(f"vetlek ({len(vl_idx)} записей)")
+        log.info("vetlek: %d инструкций", len(vl_data.get("directions", [])))
+    if vidal_path:
+        # TODO
+        pass
+    if galen_path:
+        # TODO
+        pass
+
+    # Проходим по каждому препарату vetvoice
+    for vv in vv_drugs:
+        report.checked_drugs += 1
+        drug_id = vv.get("id", 0)
+        drug_name = vv.get("name", "")
+        inn = vv.get("inn", "")
+
+        vp_match = find_in_vetprotocol(vv, vp_idx) if vp_idx else None
+        vl_match = find_in_vetlek(vv, vl_idx) if vl_idx else None
+
+        if vp_match or vl_match:
+            report.matched_drugs += 1
+
+        # Проверяем поля
+        check_dosage(vv, vp_match, vl_match,
+                     report.discrepancies, drug_id, drug_name)
+        check_side_effects(vv, vp_match, vl_match,
+                           report.discrepancies, drug_id, drug_name)
+        check_contraindications(vv, vp_match, vl_match,
+                                report.discrepancies, drug_id, drug_name)
+        check_withdrawal(vv, vl_match,
+                         report.discrepancies, drug_id, drug_name)
+
+    log.info(
+        "Валидация завершена: проверено %d, совпало %d, расхождений %d",
+        report.checked_drugs, report.matched_drugs, len(report.discrepancies),
+    )
+    return report
+
+
+# ---------------------------------------------------------------------------
+# Применение исправлений
+# ---------------------------------------------------------------------------
+
+def apply_fixes(
+    drugs_calc_path: str,
+    report: ValidationReport,
+    output_path: str,
+    severity_filter: Tuple[str, ...] = ("error", "warning"),
+) -> int:
+    """Применить предложенные исправления к drugs_calc.json.
+
+    Возвращает количество применённых исправлений.
+    """
+    with open(drugs_calc_path, "r", encoding="utf-8") as f:
+        vv_data = json.load(f)
+    vv_drugs = vv_data.get("drugs_calc", [])
+    by_id = {d.get("id"): d for d in vv_drugs}
+
+    fixes_applied = 0
+    fixed_drug_ids = set()
+
+    for d in report.discrepancies:
+        if d.severity not in severity_filter:
+            continue
+        if d.suggested_fix is None:
+            continue
+        drug = by_id.get(d.drug_id)
+        if not drug:
+            continue
+
+        field_path = d.field.split(".")
+        changed = False
+
+        if len(field_path) == 1:
+            f_name = field_path[0]
+            if f_name == "dose_per_kg":
+                # Ставим предложенную дозу
+                if drug.get("dose_per_kg") in (None, 0):
+                    drug["dose_per_kg"] = d.suggested_fix
+                    # Обновим min/max если нужно
+                    if not drug.get("dose_min"):
+                        drug["dose_min"] = round(d.suggested_fix * 0.8, 2)
+                    if not drug.get("dose_max"):
+                        drug["dose_max"] = round(d.suggested_fix * 1.2, 2)
+                    changed = True
+            elif f_name == "side_effects":
+                if not drug.get("side_effects") and isinstance(
+                    d.suggested_fix, list
+                ):
+                    drug["side_effects"] = d.suggested_fix
+                    changed = True
+            elif f_name == "withdrawal_days":
+                if drug.get("withdrawal_days") in (None, 0):
+                    drug["withdrawal_days"] = d.suggested_fix
+                    changed = True
+        elif len(field_path) == 2 and field_path[0] == "contraindications":
+            if not drug.get("contraindications"):
+                drug["contraindications"] = {
+                    "warnings": [],
+                    "pregnancy": False,
+                    "lactation": False,
+                    "young": False,
+                    "old": False,
+                }
+            c = drug["contraindications"]
+            sub = field_path[1]
+            if sub in ("pregnancy", "lactation", "young", "old"):
+                if not c.get(sub):
+                    c[sub] = True
+                    # Добавим warning
+                    warn_text = {
+                        "pregnancy": "Противопоказан при беременности.",
+                        "lactation": "Противопоказан в период лактации.",
+                        "young":     "Противопоказан молодым животным.",
+                        "old":       "Противопоказан пожилым животным.",
+                    }[sub]
+                    if warn_text not in c.get("warnings", []):
+                        c.setdefault("warnings", []).append(warn_text)
+                    changed = True
+
+        if changed:
+            fixes_applied += 1
+            fixed_drug_ids.add(d.drug_id)
+
+    # Обновим версию и метаданные
+    vv_data["version"] = str(
+        float(vv_data.get("version", "1.0")) + 0.1
+    )
+    vv_data["last_updated"] = "2026-08-13"
+    meta = vv_data.setdefault("metadata", {})
+    corrections = meta.setdefault("corrections", [])
+    corrections.append(
+        f"validate_vetvoice.py: применено {fixes_applied} исправлений "
+        f"на основе vetprotocol/vetlek ({len(fixed_drug_ids)} препаратов)"
+    )
+    vv_data["total_drugs"] = len(vv_drugs)
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(vv_data, f, ensure_ascii=False, indent=2)
+
+    report.fixed_drugs = len(fixed_drug_ids)
+    log.info(
+        "Применено %d исправлений, затронуто %d препаратов, "
+        "сохранено в %s",
+        fixes_applied, len(fixed_drug_ids), output_path,
+    )
+    return fixes_applied
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def main():
+    p = argparse.ArgumentParser(description="Валидатор vetvoice drugs_calc.json")
+    p.add_argument("--drugs-calc", required=True, help="Путь к drugs_calc.json")
+    p.add_argument("--vetprotocol", help="Путь к vetprotocol.json")
+    p.add_argument("--vetlek", help="Путь к vetlek.json")
+    p.add_argument("--vidal", help="Путь к vidal.json")
+    p.add_argument("--galen", help="Путь к galen.json")
+    p.add_argument("--output", default="validation_report.json",
+                   help="Куда сохранить отчёт")
+    p.add_argument("--apply-fixes", metavar="OUTPUT_JSON",
+                   help="Применить исправления и сохранить в указанный файл")
+    p.add_argument("--severity", default="error,warning",
+                   help="Фильтр severity для apply-fixes (через запятую)")
+    args = p.parse_args()
+
+    report = validate(
+        drugs_calc_path=args.drugs_calc,
+        vetprotocol_path=args.vetprotocol,
+        vetlek_path=args.vetlek,
+        vidal_path=args.vidal,
+        galen_path=args.galen,
+    )
+
+    with open(args.output, "w", encoding="utf-8") as f:
+        json.dump(report.to_dict(), f, ensure_ascii=False, indent=2)
+    log.info("Отчёт сохранён в %s", args.output)
+
+    # Краткий print-вывод
+    print()
+    print("=" * 60)
+    print("VetVoice Validation Report")
+    print("=" * 60)
+    print(f"Total drugs:        {report.total_drugs}")
+    print(f"Checked:            {report.checked_drugs}")
+    print(f"Matched:            {report.matched_drugs}")
+    print(f"Discrepancies:      {len(report.discrepancies)}")
+    by_sev = report.to_dict()["discrepancies_by_severity"]
+    for sev, cnt in by_sev.items():
+        print(f"  {sev:10s}:      {cnt}")
+    print()
+    print("Top fields:")
+    for f, cnt in list(report.to_dict()["discrepancies_by_field"].items())[:10]:
+        print(f"  {f:40s}: {cnt}")
+    print()
+
+    if args.apply_fixes:
+        severity = tuple(s.strip() for s in args.severity.split(","))
+        n = apply_fixes(args.drugs_calc, report, args.apply_fixes, severity)
+        print(f"Применено исправлений: {n}")
+        print(f"Исправленный файл:    {args.apply_fixes}")
+
+
+if __name__ == "__main__":
+    main()

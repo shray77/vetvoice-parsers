@@ -1,0 +1,74 @@
+{
+  "note": "Sample validation report. Full report: 182 discrepancies.",
+  "total_drugs": 2401,
+  "checked_drugs": 2401,
+  "matched_drugs": 294,
+  "discrepancies_count": 182,
+  "discrepancies_by_severity": {
+    "info": 9,
+    "warning": 169,
+    "error": 4
+  },
+  "discrepancies_by_field": {
+    "dose_per_kg": 178,
+    "contraindications.pregnancy": 3,
+    "contraindications.lactation": 1
+  },
+  "sample_discrepancies": [
+    {
+      "drug_id": 3,
+      "drug_name": "Троксимелон",
+      "field": "dose_per_kg",
+      "vetvoice_value": 14.375,
+      "source_value": 2.0,
+      "source": "vetprotocol",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Расхождение в дозе: vetvoice=14.375, vetprotocol=2.0 для кролики: 200-500 мг/кг. — требуется ручная проверка"
+    },
+    {
+      "drug_id": 63,
+      "drug_name": "ОФТАЛЬМИКА® мазь глазная",
+      "field": "dose_per_kg",
+      "vetvoice_value": 7.5,
+      "source_value": 3.5,
+      "source": "vetprotocol",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Расхождение в дозе: vetvoice=7.5, vetprotocol=3.5 для Собаки — требуется ручная проверка"
+    },
+    {
+      "drug_id": 85,
+      "drug_name": "Грануламокс",
+      "field": "dose_per_kg",
+      "vetvoice_value": 10,
+      "source_value": 15.0,
+      "source": "vetprotocol",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
+    },
+    {
+      "drug_id": 111,
+      "drug_name": "Амклав®Вет",
+      "field": "dose_per_kg",
+      "vetvoice_value": 12.5,
+      "source_value": 35.0,
+      "source": "vetprotocol",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Расхождение в дозе: vetvoice=12.5, vetprotocol=35.0 для Собаки — требуется ручная проверка"
+    },
+    {
+      "drug_id": 132,
+      "drug_name": "АМОКСИСТИМ V-15%",
+      "field": "dose_per_kg",
+      "vetvoice_value": 10,
+      "source_value": 15.0,
+      "source": "vetprotocol",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual env
+venv/
+.venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Данные выгрузки (не коммитим — большой объём)
+download/
+output/
+# Игнорируем все json кроме examples/
+/*.json
+/examples_backup/
+# examples/*.json — коммитим как образцы
+
+# Учётные данные
+.env
+*.key
+*.pem
+secrets.json
+
+# Логи
+*.log
+logs/
+
+# Клонированные репы
+vetvoice_repo/
+vetvoice-rag/
