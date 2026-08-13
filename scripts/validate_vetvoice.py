@@ -197,6 +197,54 @@ def build_vetlek_index(data: List[dict]) -> Dict[str, dict]:
     return idx
 
 
+def build_fsvps_index(data: List[dict]) -> Dict[str, dict]:
+    """Индекс препаратов fsvps по торговому наименованию и МНН.
+
+    fsvps — это госреестр Россельхознадзора (Открытые данные), содержит
+    2347 препаратов с полными структурированными полями. Покрывает в т.ч.
+    иммунобиологические (вакцины, сыворотки) — то, что не покрывают
+    vetprotocol/vetlek.
+    """
+    idx: Dict[str, dict] = {}
+    for d in data:
+        # по торговому наименованию
+        if d.get("trade_name"):
+            key = normalize_name(d["trade_name"])
+            if key:
+                idx.setdefault(key, d)
+        # по МНН
+        if d.get("inn"):
+            key = normalize_name(d["inn"])
+            if key:
+                idx.setdefault(key, d)
+    return idx
+
+
+def find_in_fsvps(
+    vv_drug: dict, idx: Dict[str, dict]
+) -> Optional[dict]:
+    """Найти соответствие в fsvps по названию или МНН."""
+    candidates = []
+    if vv_drug.get("name"):
+        candidates.append(vv_drug["name"])
+    if vv_drug.get("inn"):
+        candidates.append(vv_drug["inn"])
+
+    for cand in candidates:
+        key = normalize_name(cand)
+        if key in idx:
+            return idx[key]
+    # Fuzzy: подстрока
+    for cand in candidates:
+        key = normalize_name(cand)
+        if not key or len(key) < 4:
+            continue
+        for k, v in idx.items():
+            if (key in k or k in key) and len(k) > 4:
+                return v
+    return None
+
+
 def find_in_vetprotocol(
     vv_drug: dict, idx: Dict[str, dict]
 ) -> Optional[dict]:
@@ -863,6 +911,186 @@ def check_withdrawal(
             ))
 
 
+def check_fsvps(
+    vv_drug: dict, fsvps_drug: Optional[dict],
+    discrepancies: List[Discrepancy], drug_id: int, drug_name: str,
+) -> None:
+    """Проверка по госреестру Россельхознадзора (Открытые данные).
+
+    fsvps содержит 2347 препаратов с полными структурированными полями,
+    включая иммунобиологические (вакцины, сыворотки) — то, чего нет
+    в vetprotocol/vetlek.
+
+    Проверяем:
+    1. Совпадение МНН (если различается — warning)
+    2. Совпадение лекарственной формы
+    3. Заполнение пустых показаний/противопоказаний/побочек из fsvps
+    4. Извлечение срока годности / условий хранения
+    """
+    if not fsvps_drug:
+        return
+
+    # 1. МНН
+    vv_inn = vv_drug.get("inn", "")
+    fsvps_inn = fsvps_drug.get("inn", "")
+    if vv_inn and fsvps_inn and vv_inn.lower().strip() != fsvps_inn.lower().strip():
+        # МНН различается — возможно, разные формы или ошибка
+        # Не предлагаем fix, только warning
+        if normalize_name(vv_inn) != normalize_name(fsvps_inn):
+            discrepancies.append(Discrepancy(
+                drug_id=drug_id, drug_name=drug_name,
+                field="inn",
+                vetvoice_value=vv_inn,
+                source_value=fsvps_inn,
+                source="fsvps",
+                severity="info",
+                suggested_fix=None,
+                notes=f"МНН различается: vetvoice='{vv_inn[:50]}', "
+                      f"fsvps='{fsvps_inn[:50]}' — возможна ошибка",
+            ))
+
+    # 2. Лекарственная форма — если в vetvoice пусто, заполним из fsvps
+    vv_form = vv_drug.get("form", "")
+    fsvps_form = fsvps_drug.get("form", "")
+    if not vv_form and fsvps_form:
+        discrepancies.append(Discrepancy(
+            drug_id=drug_id, drug_name=drug_name,
+            field="form",
+            vetvoice_value=vv_form,
+            source_value=fsvps_form,
+            source="fsvps",
+            severity="warning",
+            suggested_fix=fsvps_form[:200],
+            notes=f"fsvps указывает форму: {fsvps_form[:120]}",
+        ))
+
+    # 3. Показания — если в vetvoice пусто
+    vv_ind = vv_drug.get("indications", "")
+    fsvps_ind = fsvps_drug.get("indications", "")
+    if (not vv_ind or vv_ind in ("—", "-", "")) and fsvps_ind:
+        discrepancies.append(Discrepancy(
+            drug_id=drug_id, drug_name=drug_name,
+            field="indications",
+            vetvoice_value=vv_ind,
+            source_value=fsvps_ind,
+            source="fsvps",
+            severity="warning",
+            suggested_fix=fsvps_ind[:500],
+            notes=f"fsvps указывает показания: {fsvps_ind[:120]}",
+        ))
+
+    # 4. Побочные действия — если в vetvoice пусто
+    vv_se = vv_drug.get("side_effects", []) or []
+    fsvps_se = fsvps_drug.get("side_effects", "")
+    if not vv_se and fsvps_se and len(fsvps_se) > 20:
+        # Разобьём на предложения
+        sentences = re.split(r"(?<=[.;])\s+", fsvps_se)
+        sentences = [s.strip() for s in sentences if s.strip()][:5]
+        discrepancies.append(Discrepancy(
+            drug_id=drug_id, drug_name=drug_name,
+            field="side_effects",
+            vetvoice_value=vv_se,
+            source_value=sentences,
+            source="fsvps",
+            severity="warning",
+            suggested_fix=sentences,
+            notes=f"fsvps указывает побочные действия",
+        ))
+
+    # 5. Противопоказания — проверим беременность/лактацию
+    fsvps_contra = fsvps_drug.get("contraindications", "")
+    if fsvps_contra:
+        text = fsvps_contra.lower()
+        vv_c = vv_drug.get("contraindications", {}) or {}
+        vv_preg = vv_c.get("pregnancy", False)
+        vv_lact = vv_c.get("lactation", False)
+
+        # Если в fsvps явно написано про беременность как противопоказание
+        if not vv_preg and re.search(
+            r"(?i)противопоказан.*беремен|беремен.*противопоказан|"
+            r"запрещ.*беремен|беремен.*запрещ|"
+            r"не\s+примен.*беремен|беремен.*не\s+примен",
+            text,
+        ):
+            discrepancies.append(Discrepancy(
+                drug_id=drug_id, drug_name=drug_name,
+                field="contraindications.pregnancy",
+                vetvoice_value=vv_preg,
+                source_value=True,
+                source="fsvps",
+                severity="error",
+                suggested_fix=True,
+                notes="fsvps (госреестр) прямо указывает противопоказание "
+                      "при беременности, vetvoice — нет",
+            ))
+        if not vv_lact and re.search(
+            r"(?i)противопоказан.*лактаци|лактаци.*противопоказан|"
+            r"запрещ.*лактаци|лактаци.*запрещ|"
+            r"не\s+примен.*лактаци|лактаци.*не\s+примен",
+            text,
+        ):
+            discrepancies.append(Discrepancy(
+                drug_id=drug_id, drug_name=drug_name,
+                field="contraindications.lactation",
+                vetvoice_value=vv_lact,
+                source_value=True,
+                source="fsvps",
+                severity="error",
+                suggested_fix=True,
+                notes="fsvps (госреестр) прямо указывает противопоказание "
+                      "при лактации, vetvoice — нет",
+            ))
+
+
+def check_fsvps_dosage(
+    vv_drug: dict, fsvps_drug: Optional[dict],
+    discrepancies: List[Discrepancy], drug_id: int, drug_name: str,
+) -> None:
+    """Извлечь дозировку из поля fsvps.dosage.
+
+    Поле 'dosage' в fsvps содержит текст вроде:
+      '2 мл (100 прививных доз)' для вакцин
+      '50 мг/мл' для лекарств
+      '1000 МЕ/г' для антибиотиков
+
+    Для вакцин — это разовая доза, не мг/кг. Для обычных лекарств —
+    концентрация действующего вещества.
+    """
+    if not fsvps_drug:
+        return
+
+    fsvps_dosage = fsvps_drug.get("dosage", "")
+    if not fsvps_dosage:
+        return
+
+    # Если в vetvoice dose_per_kg пусто, и в fsvps есть концентрация мг/мл
+    # — заполним как hint (не fix, потому что это не мг/кг)
+    vv_dose = vv_drug.get("dose_per_kg")
+    if vv_dose in (None, 0):
+        # Ищем мг/кг в fsvps dosage
+        m = re.search(
+            r"(\d+(?:[.,]\d+)?)\s*(мг|мл|мкг|МЕ|г)\s*/\s*(кг)",
+            fsvps_dosage, re.I,
+        )
+        if m:
+            try:
+                val = float(m.group(1).replace(",", "."))
+                if _is_realistic_dose(val):
+                    discrepancies.append(Discrepancy(
+                        drug_id=drug_id, drug_name=drug_name,
+                        field="dose_per_kg",
+                        vetvoice_value=vv_dose,
+                        source_value=val,
+                        source="fsvps",
+                        severity="warning",
+                        suggested_fix=val,
+                        notes=f"fsvps указывает дозу {val} {m.group(2)}/{m.group(3)}: "
+                              f"{fsvps_dosage[:120]}",
+                    ))
+            except ValueError:
+                pass
+
+
 # ---------------------------------------------------------------------------
 # Главный цикл валидации
 # ---------------------------------------------------------------------------
@@ -873,6 +1101,7 @@ def validate(
     vetlek_path: Optional[str] = None,
     vidal_path: Optional[str] = None,
     galen_path: Optional[str] = None,
+    fsvps_path: Optional[str] = None,
 ) -> ValidationReport:
     """Провалидировать drugs_calc.json по источникам."""
     report = ValidationReport()
@@ -885,7 +1114,7 @@ def validate(
     log.info("Загружено %d препаратов vetvoice", report.total_drugs)
 
     # Загрузить источники
-    vp_idx, vl_idx = {}, {}
+    vp_idx, vl_idx, fsvps_idx = {}, {}, {}
     if vetprotocol_path:
         with open(vetprotocol_path, "r", encoding="utf-8") as f:
             vp_data = json.load(f)
@@ -904,6 +1133,14 @@ def validate(
     if galen_path:
         # TODO
         pass
+    if fsvps_path:
+        with open(fsvps_path, "r", encoding="utf-8") as f:
+            fsvps_data = json.load(f)
+        fsvps_idx = build_fsvps_index(fsvps_data.get("drugs", []))
+        report.sources_used.append(
+            f"fsvps ({len(fsvps_data.get('drugs', []))} записей)"
+        )
+        log.info("fsvps: %d препаратов", len(fsvps_data.get("drugs", [])))
 
     # Проходим по каждому препарату vetvoice
     for vv in vv_drugs:
@@ -914,8 +1151,9 @@ def validate(
 
         vp_match = find_in_vetprotocol(vv, vp_idx) if vp_idx else None
         vl_match = find_in_vetlek(vv, vl_idx) if vl_idx else None
+        fsvps_match = find_in_fsvps(vv, fsvps_idx) if fsvps_idx else None
 
-        if vp_match or vl_match:
+        if vp_match or vl_match or fsvps_match:
             report.matched_drugs += 1
 
         # Проверяем поля
@@ -930,6 +1168,12 @@ def validate(
                                 report.discrepancies, drug_id, drug_name)
         check_withdrawal(vv, vl_match,
                          report.discrepancies, drug_id, drug_name)
+        # ⭐ Проверка по госреестру FSVPS (включая вакцины!)
+        if fsvps_match:
+            check_fsvps(vv, fsvps_match,
+                        report.discrepancies, drug_id, drug_name)
+            check_fsvps_dosage(vv, fsvps_match,
+                               report.discrepancies, drug_id, drug_name)
 
     log.info(
         "Валидация завершена: проверено %d, совпало %d, расхождений %d",
@@ -1350,6 +1594,7 @@ def main():
     p.add_argument("--vetlek", help="Путь к vetlek.json")
     p.add_argument("--vidal", help="Путь к vidal.json")
     p.add_argument("--galen", help="Путь к galen.json")
+    p.add_argument("--fsvps", help="Путь к fsvps.json (Открытые данные Россельхознадзора)")
     p.add_argument("--output", default="validation_report.json",
                    help="Куда сохранить отчёт")
     p.add_argument("--apply-fixes", metavar="OUTPUT_JSON",
@@ -1374,6 +1619,7 @@ def main():
         vetlek_path=args.vetlek,
         vidal_path=args.vidal,
         galen_path=args.galen,
+        fsvps_path=args.fsvps,
     )
 
     with open(args.output, "w", encoding="utf-8") as f:

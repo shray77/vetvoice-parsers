@@ -114,6 +114,11 @@ jobs:
             --fetch-all output/vetlek.json \
             --max ${{ github.event.inputs.max_vetlek || '200' }}
 
+      # ---------- 7.5. Скачивание Открытых данных Россельхознадзора ----------
+      - name: 📊 Fetch FSVPS Open Data (госреестр)
+        run: |
+          python3 scripts/parsers/fsvps_parser.py --fetch output/fsvps.json
+
       # ---------- 8. Валидация ----------
       - name: 🔍 Validate drugs_calc.json
         env:
@@ -123,6 +128,7 @@ jobs:
             --drugs-calc vetvoice_repo/assets/data/drugs_calc.json \
             --vetprotocol output/vetprotocol.json \
             --vetlek output/vetlek.json \
+            --fsvps output/fsvps.json \
             --output output/validation_report.json \
             --apply-fixes output/drugs_calc_fixed.json \
             --export-csv output/discrepancies.csv \
@@ -198,6 +204,7 @@ jobs:
           path: |
             output/vetprotocol.json
             output/vetlek.json
+            output/fsvps.json
             output/validation_report.json
             output/drugs_calc_fixed.json
             output/discrepancies.csv
