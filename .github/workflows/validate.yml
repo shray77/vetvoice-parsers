@@ -34,6 +34,11 @@ on:
           - '200'
           - '500'
           - '1337'
+      aggressive:
+        description: 'Aggressive mode (перезаписывать кривые дозы)'
+        required: false
+        default: true
+        type: boolean
 
   push:
     branches: [main]
@@ -111,13 +116,18 @@ jobs:
 
       # ---------- 8. Валидация ----------
       - name: 🔍 Validate drugs_calc.json
+        env:
+          AGGRESSIVE_FLAG: ${{ github.event.inputs.aggressive == 'true' && '--aggressive' || '' }}
         run: |
           python3 scripts/validate_vetvoice.py \
             --drugs-calc vetvoice_repo/assets/data/drugs_calc.json \
             --vetprotocol output/vetprotocol.json \
             --vetlek output/vetlek.json \
             --output output/validation_report.json \
-            --apply-fixes output/drugs_calc_fixed.json
+            --apply-fixes output/drugs_calc_fixed.json \
+            --export-csv output/discrepancies.csv \
+            --export-md output/review.md \
+            $AGGRESSIVE_FLAG
 
       # ---------- 9. Краткая сводка в логе ----------
       - name: 📊 Print summary
@@ -190,6 +200,8 @@ jobs:
             output/vetlek.json
             output/validation_report.json
             output/drugs_calc_fixed.json
+            output/discrepancies.csv
+            output/review.md
           retention-days: 30
           compression-level: 6
 

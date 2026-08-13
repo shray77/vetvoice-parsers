@@ -260,6 +260,28 @@ def _is_realistic_dose(value: float) -> bool:
     return 0.001 <= value <= 80.0
 
 
+def _is_safe_to_overwrite(old_val: float, new_val: float) -> bool:
+    """Проверить, безопасно ли перезаписать old_val на new_val в aggressive режиме.
+
+    Не перезаписываем если:
+    - new_val нереалистичен
+    - Различие > 10x (это скорее всего false positive в матчинге —
+      совпало название, но МНН разный)
+    - Одно из значений пустое/ноль
+    """
+    if old_val in (None, 0) or new_val in (None, 0):
+        return old_val in (None, 0) and new_val not in (None, 0)
+    if not _is_realistic_dose(new_val):
+        return False
+    if not _is_realistic_dose(old_val):
+        return True  # старое явно кривое — заменяем
+    # Различие > 10x — подозрительно, пропускаем
+    ratio = max(old_val, new_val) / min(old_val, new_val)
+    if ratio > 10:
+        return False
+    return True
+
+
 # ---------------------------------------------------------------------------
 # Видовая разница доз — главная фича валидатора
 # ---------------------------------------------------------------------------
@@ -925,10 +947,17 @@ def apply_fixes(
     report: ValidationReport,
     output_path: str,
     severity_filter: Tuple[str, ...] = ("error", "warning"),
+    aggressive: bool = False,
 ) -> int:
     """Применить предложенные исправления к drugs_calc.json.
 
     Возвращает количество применённых исправлений.
+
+    Args:
+        aggressive: если True — перезаписывает существующие значения,
+                    если они кажутся кривыми (нереалистичные дозы,
+                    расхождения >50%). По умолчанию False (только
+                    безопасные исправления пустых полей).
     """
     with open(drugs_calc_path, "r", encoding="utf-8") as f:
         vv_data = json.load(f)
@@ -937,12 +966,55 @@ def apply_fixes(
 
     fixes_applied = 0
     fixed_drug_ids = set()
+    auto_corrections_log: List[str] = []  # детальный лог для metadata
+
+    def _log_change(drug_id: int, drug_name: str, field: str,
+                    old_val, new_val, source: str, reason: str) -> None:
+        """Записать изменение в лог metadata.corrections."""
+        auto_corrections_log.append(
+            f"#{drug_id} {drug_name[:30]}: {field} "
+            f"{old_val!r} -> {new_val!r} "
+            f"(src={source}, reason={reason})"
+        )
 
     for d in report.discrepancies:
         if d.severity not in severity_filter:
             continue
         if d.suggested_fix is None:
+            # В aggressive режиме: для dose_per_kg без suggested_fix
+            # (расхождение существующего значения) — перезаписать
+            if aggressive and d.field == "dose_per_kg":
+                drug = by_id.get(d.drug_id)
+                if not drug:
+                    continue
+                vv_dose = drug.get("dose_per_kg")
+                source_dose = d.source_value
+                if vv_dose and source_dose:
+                    # Проверяем, безопасно ли перезаписать
+                    if not _is_safe_to_overwrite(vv_dose, source_dose):
+                        continue  # различие > 10x — пропускаем (false positive)
+                    # Если в vetvoice доза нереалистичная — заменить
+                    if not _is_realistic_dose(vv_dose):
+                        drug["dose_per_kg"] = source_dose
+                        drug["dose_min"] = round(source_dose * 0.8, 2)
+                        drug["dose_max"] = round(source_dose * 1.2, 2)
+                        fixes_applied += 1
+                        fixed_drug_ids.add(d.drug_id)
+                        _log_change(d.drug_id, d.drug_name, "dose_per_kg",
+                                    vv_dose, source_dose, d.source,
+                                    "vetvoice dose unrealistic")
+                    # Если расхождение >50% (но <10x) — доверяем источнику
+                    elif not dose_values_close(vv_dose, source_dose, 0.5):
+                        drug["dose_per_kg"] = source_dose
+                        drug["dose_min"] = round(source_dose * 0.8, 2)
+                        drug["dose_max"] = round(source_dose * 1.2, 2)
+                        fixes_applied += 1
+                        fixed_drug_ids.add(d.drug_id)
+                        _log_change(d.drug_id, d.drug_name, "dose_per_kg",
+                                    vv_dose, source_dose, d.source,
+                                    f"divergence >50% ({abs(vv_dose-source_dose)/max(vv_dose,source_dose)*100:.0f}%)")
             continue
+
         drug = by_id.get(d.drug_id)
         if not drug:
             continue
@@ -953,19 +1025,38 @@ def apply_fixes(
         if len(field_path) == 1:
             f_name = field_path[0]
             if f_name == "dose_per_kg":
-                # Ставим предложенную дозу
-                if drug.get("dose_per_kg") in (None, 0):
-                    drug["dose_per_kg"] = d.suggested_fix
-                    # Обновим min/max если нужно
-                    if not drug.get("dose_min"):
-                        drug["dose_min"] = round(d.suggested_fix * 0.8, 2)
-                    if not drug.get("dose_max"):
-                        drug["dose_max"] = round(d.suggested_fix * 1.2, 2)
+                vv_dose = drug.get("dose_per_kg")
+                new_dose = d.suggested_fix
+                # Безопасный режим: только если пусто
+                # Aggressive: также если существующая нереалистична или
+                #             отличается >50% (но не более 10x)
+                should_apply = False
+                reason = ""
+                if vv_dose in (None, 0):
+                    should_apply = True
+                    reason = "was empty"
+                elif aggressive:
+                    if not _is_safe_to_overwrite(vv_dose, new_dose):
+                        pass  # пропускаем (различие > 10x — false positive)
+                    elif not _is_realistic_dose(vv_dose):
+                        should_apply = True
+                        reason = f"was unrealistic ({vv_dose})"
+                    elif not dose_values_close(vv_dose, new_dose, 0.5):
+                        should_apply = True
+                        pct = abs(vv_dose - new_dose) / max(vv_dose, new_dose) * 100
+                        reason = f"divergence {pct:.0f}%"
+
+                if should_apply and _is_realistic_dose(new_dose):
+                    drug["dose_per_kg"] = new_dose
+                    drug["dose_min"] = round(new_dose * 0.8, 2)
+                    drug["dose_max"] = round(new_dose * 1.2, 2)
                     changed = True
+                    _log_change(d.drug_id, d.drug_name, "dose_per_kg",
+                                vv_dose, new_dose, d.source, reason)
             elif f_name == "side_effects":
-                if not drug.get("side_effects") and isinstance(
-                    d.suggested_fix, list
-                ):
+                if (not drug.get("side_effects") or
+                    (aggressive and isinstance(d.suggested_fix, list)
+                     and len(d.suggested_fix) > len(drug.get("side_effects") or []))):
                     drug["side_effects"] = d.suggested_fix
                     changed = True
             elif f_name == "withdrawal_days":
@@ -1030,23 +1121,47 @@ def apply_fixes(
             if animal not in drug["animal_specific"]:
                 drug["animal_specific"][animal] = data
                 changed = True
+                _log_change(d.drug_id, d.drug_name, f"animal_specific.{animal}",
+                            None, data, d.source, "added new animal")
         elif (len(field_path) == 3 and field_path[0] == "animal_specific"
               and field_path[2] == "dose_per_kg"):
-            # ⭐ Заполняем пустую дозу внутри animal_specific[animal]
+            # ⭐ Заполняем/перезаписываем дозу внутри animal_specific[animal]
             animal = field_path[1]
             if not drug.get("animal_specific"):
                 drug["animal_specific"] = {}
             spec = drug["animal_specific"].get(animal) or {}
-            if spec.get("dose_per_kg") in (None, 0):
-                # suggested_fix = {dose_per_kg, dose_unit, frequency, ...}
+            old_dose = spec.get("dose_per_kg")
+            new_dose = (d.suggested_fix.get("dose_per_kg")
+                        if isinstance(d.suggested_fix, dict)
+                        else d.suggested_fix)
+            should_apply = False
+            reason = ""
+            if old_dose in (None, 0):
+                should_apply = True
+                reason = "was empty"
+            elif aggressive and new_dose and _is_realistic_dose(new_dose):
+                if not _is_safe_to_overwrite(old_dose, new_dose):
+                    pass  # различие > 10x — пропускаем
+                elif not _is_realistic_dose(old_dose):
+                    should_apply = True
+                    reason = f"was unrealistic ({old_dose})"
+                elif not dose_values_close(old_dose, new_dose, 0.5):
+                    should_apply = True
+                    pct = abs(old_dose - new_dose) / max(old_dose, new_dose) * 100
+                    reason = f"divergence {pct:.0f}%"
+
+            if should_apply:
                 if isinstance(d.suggested_fix, dict):
                     for k, v in d.suggested_fix.items():
-                        if v and not spec.get(k):
+                        if v:
                             spec[k] = v
                 else:
                     spec["dose_per_kg"] = d.suggested_fix
                 drug["animal_specific"][animal] = spec
                 changed = True
+                _log_change(d.drug_id, d.drug_name,
+                            f"animal_specific.{animal}.dose_per_kg",
+                            old_dose, new_dose, d.source, reason)
 
         if changed:
             fixes_applied += 1
@@ -1059,10 +1174,26 @@ def apply_fixes(
     vv_data["last_updated"] = "2026-08-13"
     meta = vv_data.setdefault("metadata", {})
     corrections = meta.setdefault("corrections", [])
+    mode_label = "aggressive" if aggressive else "safe"
     corrections.append(
-        f"validate_vetvoice.py: применено {fixes_applied} исправлений "
-        f"на основе vetprotocol/vetlek ({len(fixed_drug_ids)} препаратов)"
+        f"validate_vetvoice.py ({mode_label} mode): применено "
+        f"{fixes_applied} исправлений в {len(fixed_drug_ids)} препаратах "
+        f"на основе vetprotocol/vetlek"
     )
+    # В aggressive режиме добавляем детальный лог
+    if aggressive and auto_corrections_log:
+        corrections.append(
+            f"validate_vetvoice.py: детальный лог изменений "
+            f"({len(auto_corrections_log)} записей):"
+        )
+        # Добавляем первые 200 записей (чтобы не раздуло JSON)
+        for entry in auto_corrections_log[:200]:
+            corrections.append(f"  - {entry}")
+        if len(auto_corrections_log) > 200:
+            corrections.append(
+                f"  ... и ещё {len(auto_corrections_log) - 200} записей "
+                f"(см. validation_report.json)"
+            )
     vv_data["total_drugs"] = len(vv_drugs)
 
     with open(output_path, "w", encoding="utf-8") as f:
@@ -1070,11 +1201,142 @@ def apply_fixes(
 
     report.fixed_drugs = len(fixed_drug_ids)
     log.info(
-        "Применено %d исправлений, затронуто %d препаратов, "
+        "Применено %d исправлений (mode=%s), затронуто %d препаратов, "
         "сохранено в %s",
-        fixes_applied, len(fixed_drug_ids), output_path,
+        fixes_applied, "aggressive" if aggressive else "safe",
+        len(fixed_drug_ids), output_path,
     )
     return fixes_applied
+
+
+# ---------------------------------------------------------------------------
+# Экспорт спорных расхождений в CSV для ручной проверки
+# ---------------------------------------------------------------------------
+
+def export_discrepancies_csv(
+    report: ValidationReport,
+    output_path: str,
+    severity_filter: Tuple[str, ...] = ("error", "warning", "info"),
+) -> int:
+    """Экспортировать все расхождения в CSV для ручной проверки.
+
+    Возвращает количество строк.
+    """
+    import csv
+
+    rows = 0
+    with open(output_path, "w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "drug_id", "drug_name", "field", "severity", "source",
+            "vetvoice_value", "source_value", "suggested_fix",
+            "auto_applied", "notes",
+        ])
+        for d in report.discrepancies:
+            if d.severity not in severity_filter:
+                continue
+            writer.writerow([
+                d.drug_id,
+                d.drug_name,
+                d.field,
+                d.severity,
+                d.source,
+                json.dumps(d.vetvoice_value, ensure_ascii=False)
+                    if d.vetvoice_value is not None else "",
+                json.dumps(d.source_value, ensure_ascii=False)
+                    if d.source_value is not None else "",
+                json.dumps(d.suggested_fix, ensure_ascii=False)
+                    if d.suggested_fix is not None else "",
+                "yes" if d.suggested_fix is not None else "review_needed",
+                d.notes[:500],
+            ])
+            rows += 1
+    log.info("CSV-отчёт (%d строк) сохранён в %s", rows, output_path)
+    return rows
+
+
+def export_review_markdown(
+    report: ValidationReport,
+    output_path: str,
+    vv_data_path: Optional[str] = None,
+) -> int:
+    """Экспортировать человекочитаемый Markdown-отчёт для ручной проверки.
+
+    Группирует расхождения по drug_id, показывает все проблемы одного
+    препарата вместе. Удобно для пошагового разбора.
+    """
+    by_drug: Dict[int, List[Discrepancy]] = {}
+    for d in report.discrepancies:
+        by_drug.setdefault(d.drug_id, []).append(d)
+
+    # Загружаем vetvoice для контекста
+    vv_drugs: Dict[int, dict] = {}
+    if vv_data_path:
+        try:
+            with open(vv_data_path, "r", encoding="utf-8") as f:
+                vv = json.load(f)
+            vv_drugs = {d.get("id"): d for d in vv.get("drugs_calc", [])}
+        except Exception:
+            pass
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write("# VetVoice — Отчёт для ручной проверки\n\n")
+        f.write(f"**Всего препаратов с расхождениями:** {len(by_drug)}\n\n")
+        f.write(f"**Всего расхождений:** {len(report.discrepancies)}\n\n")
+        f.write("## Статистика по severity\n\n")
+        for sev in ("error", "warning", "info"):
+            n = sum(1 for d in report.discrepancies if d.severity == sev)
+            f.write(f"- **{sev}**: {n}\n")
+        f.write("\n---\n\n")
+
+        # Сортируем: сначала error, потом по drug_id
+        def _sort_key(item):
+            did, disc_list = item
+            min_sev = min(
+                ({"error": 0, "warning": 1, "info": 2}[d.severity]
+                 for d in disc_list),
+                default=3,
+            )
+            return (min_sev, did)
+
+        for did, disc_list in sorted(by_drug.items(), key=_sort_key):
+            drug = vv_drugs.get(did, {})
+            name = disc_list[0].drug_name
+            f.write(f"## #{did} {name}\n\n")
+            if drug:
+                f.write(f"- **Категория:** {drug.get('category', '?')}\n")
+                f.write(f"- **МНН:** {drug.get('inn', '?')}\n")
+                f.write(f"- **Животные:** {', '.join(drug.get('animals', []))}\n")
+                f.write(f"- **Текущая доза:** {drug.get('dose_per_kg', '?')} "
+                        f"{drug.get('dose_unit', '')}\n")
+                if drug.get("animal_specific"):
+                    f.write("- **Видовые дозы:**\n")
+                    for animal, spec in drug["animal_specific"].items():
+                        d_pk = spec.get("dose_per_kg", "?")
+                        f.write(f"  - {animal}: {d_pk} "
+                                f"{spec.get('dose_unit', '')} "
+                                f"({spec.get('method', '?')})\n")
+                f.write("\n")
+            f.write("### Расхождения\n\n")
+            f.write("| Поле | Severity | Источник | VetVoice | Источник | "
+                    "Действие |\n")
+            f.write("|------|----------|----------|----------|-----------|"
+                    "----------|\n")
+            for d in disc_list:
+                vv_s = str(d.vetvoice_value)[:60] if d.vetvoice_value is not None else "—"
+                src_s = str(d.source_value)[:60] if d.source_value is not None else "—"
+                action = ("✅ auto" if d.suggested_fix is not None
+                          else "🔍 ручная")
+                f.write(f"| {d.field} | {d.severity} | {d.source} | "
+                        f"{vv_s} | {src_s} | {action} |\n")
+            f.write("\n")
+            # notes первого расхождения
+            f.write(f"**Заметки:** {disc_list[0].notes[:300]}\n\n")
+            f.write("---\n\n")
+
+    log.info("Markdown-отчёт (%d препаратов) сохранён в %s",
+             len(by_drug), output_path)
+    return len(by_drug)
 
 
 # ---------------------------------------------------------------------------
@@ -1092,6 +1354,16 @@ def main():
                    help="Куда сохранить отчёт")
     p.add_argument("--apply-fixes", metavar="OUTPUT_JSON",
                    help="Применить исправления и сохранить в указанный файл")
+    p.add_argument("--aggressive", action="store_true",
+                   help="Aggressive mode: перезаписывать существующие "
+                        "кривые дозы (нереалистичные или расхождение >50%). "
+                        "По умолчанию применяются только безопасные fix "
+                        "(заполнение пустых полей).")
+    p.add_argument("--export-csv", metavar="OUTPUT_CSV",
+                   help="Экспорт всех расхождений в CSV для ручной проверки")
+    p.add_argument("--export-md", metavar="OUTPUT_MD",
+                   help="Экспорт человекочитаемого Markdown-отчёта "
+                        "для ручной проверки")
     p.add_argument("--severity", default="error,warning",
                    help="Фильтр severity для apply-fixes (через запятую)")
     args = p.parse_args()
@@ -1111,7 +1383,7 @@ def main():
     # Краткий print-вывод
     print()
     print("=" * 60)
-    print("VetVoice Validation Report")
+    print(f"VetVoice Validation Report{' (AGGRESSIVE MODE)' if args.aggressive else ''}")
     print("=" * 60)
     print(f"Total drugs:        {report.total_drugs}")
     print(f"Checked:            {report.checked_drugs}")
@@ -1126,9 +1398,23 @@ def main():
         print(f"  {f:40s}: {cnt}")
     print()
 
+    # CSV экспорт
+    if args.export_csv:
+        n = export_discrepancies_csv(report, args.export_csv)
+        print(f"CSV-отчёт: {n} строк -> {args.export_csv}")
+
+    # Markdown экспорт
+    if args.export_md:
+        n = export_review_markdown(report, args.export_md,
+                                    vv_data_path=args.drugs_calc)
+        print(f"Markdown-отчёт: {n} препаратов -> {args.export_md}")
+
     if args.apply_fixes:
         severity = tuple(s.strip() for s in args.severity.split(","))
-        n = apply_fixes(args.drugs_calc, report, args.apply_fixes, severity)
+        n = apply_fixes(args.drugs_calc, report, args.apply_fixes,
+                        severity, aggressive=args.aggressive)
+        mode = "AGGRESSIVE" if args.aggressive else "safe"
+        print(f"Режим: {mode}")
         print(f"Применено исправлений: {n}")
         print(f"Исправлено препаратов: {report.fixed_drugs}")
         print(f"Исправленный файл:    {args.apply_fixes}")
