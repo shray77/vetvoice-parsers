@@ -1,16 +1,13 @@
 {
-  "note": "Drugs changed by validator. Full file: drugs_calc_fixed.json (v7.5).",
+  "note": "Drugs changed by validator (including animal_specific).",
   "version_original": "7.4",
   "version_fixed": "7.5",
-  "total_changed": 5,
+  "total_changed": 7,
   "changes": [
     {
       "id": 663,
       "name": "Амино-Solvo",
       "original": {
-        "dose_per_kg": 0.1,
-        "dose_min": 0.1,
-        "dose_max": 0.1,
         "contraindications": {
           "pregnancy": false,
           "lactation": false,
@@ -18,16 +15,9 @@
           "warnings": [
             "Травматический ретикулит, а также индивидуальная повышенная чувствительность животного к компонентам препарата."
           ]
-        },
-        "side_effects": [
-          "При высокой скорости введения может наблюдаться лёгкое беспокойство, которое прекращается при снижении скорости введения."
-        ],
-        "withdrawal_days": 0
+        }
       },
       "fixed": {
-        "dose_per_kg": 0.1,
-        "dose_min": 0.1,
-        "dose_max": 0.1,
         "contraindications": {
           "pregnancy": true,
           "lactation": true,
@@ -37,20 +27,13 @@
             "Противопоказан при беременности.",
             "Противопоказан в период лактации."
           ]
-        },
-        "side_effects": [
-          "При высокой скорости введения может наблюдаться лёгкое беспокойство, которое прекращается при снижении скорости введения."
-        ],
-        "withdrawal_days": 0
+        }
       }
     },
     {
       "id": 806,
       "name": "Аверсект® К&С",
       "original": {
-        "dose_per_kg": 0.2,
-        "dose_min": 0.16000000000000003,
-        "dose_max": 0.24,
         "contraindications": {
           "pregnancy": false,
           "lactation": false,
@@ -58,16 +41,9 @@
           "warnings": [
             "Индивидуальная повышенная чувствительность животного к компонентам препарата (в том числе в анамнезе). Не следует применять собакам породы колли, бобтейлы и шелти. Не предназначен для обработки продуктивных животных."
           ]
-        },
-        "side_effects": [
-          "В соответствии с настоящей инструкцией побочных явлений и осложнений у животных, как правило, не наблюдается."
-        ],
-        "withdrawal_days": 0
+        }
       },
       "fixed": {
-        "dose_per_kg": 0.2,
-        "dose_min": 0.16000000000000003,
-        "dose_max": 0.24,
         "contraindications": {
           "pregnancy": true,
           "lactation": false,
@@ -76,11 +52,136 @@
             "Индивидуальная повышенная чувствительность животного к компонентам препарата (в том числе в анамнезе). Не следует применять собакам породы колли, бобтейлы и шелти. Не предназначен для обработки продуктивных животных.",
             "Противопоказан при беременности."
           ]
-        },
-        "side_effects": [
-          "В соответствии с настоящей инструкцией побочных явлений и осложнений у животных, как правило, не наблюдается."
-        ],
-        "withdrawal_days": 0
+        }
+      }
+    },
+    {
+      "id": 1413,
+      "name": "Отидез®",
+      "original": {
+        "animal_specific": {
+          "Собаки": {
+            "dose_per_kg": 0,
+            "dose_min": 0,
+            "dose_max": 0,
+            "dose_unit": "fixed",
+            "frequency": "1 раз в день",
+            "route": "внутрь",
+            "notes": "20-40 мг/кг",
+            "course_days": "4-8 недель"
+          },
+          "Пушные звери": {
+            "dose_per_kg": 0,
+            "dose_min": 0,
+            "dose_max": 0,
+            "dose_unit": "fixed",
+            "frequency": "1 раз в день",
+            "route": "внутрь",
+            "notes": "0,1-0,5 мг/кг, в/м/в/в, по показаниям",
+            "course_days": "4-8 недель"
+          },
+          "Кошки": {
+            "dose_per_kg": 3,
+            "dose_min": 2,
+            "dose_max": 4,
+            "method": "внутримышечно / подкожно",
+            "frequency": "2 раза в сутки"
+          },
+          "КРС": {
+            "dose_per_kg": 4,
+            "dose_min": 2,
+            "dose_max": 6,
+            "method": "внутримышечно",
+            "frequency": "2 раза в сутки"
+          },
+          "Свиньи": {
+            "dose_per_kg": 4,
+            "dose_min": 2,
+            "dose_max": 6,
+            "method": "внутримышечно",
+            "frequency": "2 раза в сутки"
+          },
+          "Птица": {
+            "dose_per_kg": 5,
+            "dose_min": 3,
+            "dose_max": 10,
+            "method": "внутримышечно",
+            "frequency": "2 раза в сутки"
+          },
+          "Кролики": {
+            "dose_per_kg": 0,
+            "dose_min": 0,
+            "dose_max": 0,
+            "dose_unit": "fixed",
+            "frequency": "1 раз в день",
+            "route": "внутрь",
+            "notes": "0,1-0,5 мг/кг, в/м/в/в, по показаниям",
+            "course_days": "4-8 недель"
+          }
+        }
+      },
+      "fixed": {
+        "animal_specific": {
+          "Собаки": {
+            "dose_per_kg": 14.0,
+            "dose_min": 0,
+            "dose_max": 0,
+            "dose_unit": "fixed",
+            "frequency": "1 раз в день",
+            "route": "внутрь",
+            "notes": "20-40 мг/кг",
+            "course_days": "4-8 недель",
+            "method": "внутримышечно"
+          },
+          "Пушные звери": {
+            "dose_per_kg": 0,
+            "dose_min": 0,
+            "dose_max": 0,
+            "dose_unit": "fixed",
+            "frequency": "1 раз в день",
+            "route": "внутрь",
+            "notes": "0,1-0,5 мг/кг, в/м/в/в, по показаниям",
+            "course_days": "4-8 недель"
+          },
+          "Кошки": {
+            "dose_per_kg": 3,
+            "dose_min": 2,
+            "dose_max": 4,
+            "method": "внутримышечно / подкожно",
+            "frequency": "2 раза в сутки"
+          },
+          "КРС": {
+            "dose_per_kg": 4,
+            "dose_min": 2,
+            "dose_max": 6,
+            "method": "внутримышечно",
+            "frequency": "2 раза в сутки"
+          },
+          "Свиньи": {
+            "dose_per_kg": 4,
+            "dose_min": 2,
+            "dose_max": 6,
+            "method": "внутримышечно",
+            "frequency": "2 раза в сутки"
+          },
+          "Птица": {
+            "dose_per_kg": 5,
+            "dose_min": 3,
+            "dose_max": 10,
+            "method": "внутримышечно",
+            "frequency": "2 раза в сутки"
+          },
+          "Кролики": {
+            "dose_per_kg": 0,
+            "dose_min": 0,
+            "dose_max": 0,
+            "dose_unit": "fixed",
+            "frequency": "1 раз в день",
+            "route": "внутрь",
+            "notes": "0,1-0,5 мг/кг, в/м/в/в, по показаниям",
+            "course_days": "4-8 недель"
+          }
+        }
       }
     },
     {
@@ -88,84 +189,36 @@
       "name": "Мазь салициловая 2%, 5%, 10%",
       "original": {
         "dose_per_kg": 0,
-        "dose_min": 0,
-        "dose_max": 0,
-        "contraindications": {
-          "pregnancy": false,
-          "lactation": false,
-          "young": false,
-          "warnings": [
-            "Противопоказанием к применению лекарственного препарата является индивидуальная повышенная чувствительность животного к компонентам препарата."
-          ]
-        },
-        "side_effects": [
-          "Побочных явлений и осложнений при применении Мази салициловой 2%, 5%, 10% в соответствии с настоящей инструкцией, как правило, не наблюдается."
-        ],
-        "withdrawal_days": 0
+        "animal_specific": {}
       },
       "fixed": {
         "dose_per_kg": 1.0,
-        "dose_min": 0.8,
-        "dose_max": 1.2,
-        "contraindications": {
-          "pregnancy": false,
-          "lactation": false,
-          "young": false,
-          "warnings": [
-            "Противопоказанием к применению лекарственного препарата является индивидуальная повышенная чувствительность животного к компонентам препарата."
-          ]
-        },
-        "side_effects": [
-          "Побочных явлений и осложнений при применении Мази салициловой 2%, 5%, 10% в соответствии с настоящей инструкцией, как правило, не наблюдается."
-        ],
-        "withdrawal_days": 0
+        "animal_specific": {
+          "Собаки": {
+            "dose_per_kg": 25.0,
+            "dose_unit": "мг/кг",
+            "frequency": "каждые 24 ч",
+            "method": "перорально",
+            "course_days": "",
+            "notes": "0,5–1 мг/кг перорально. каждые 24 часа или 0,5 мг/кг перорально каждые 12 часов.; 10–20 мг/кг перорально. Каждые 12 часов, безопасность данной дозы вызывает сомнение. Кошки:; предотвращения развития тромбоэмболии 3 раза в неделю или 0"
+          }
+        }
       }
     },
     {
       "id": 2251,
       "name": "АвиБлю",
       "original": {
-        "dose_per_kg": 0,
-        "dose_min": 0,
-        "dose_max": 0,
-        "contraindications": {
-          "pregnancy": false,
-          "lactation": false,
-          "young": false,
-          "warnings": [
-            "не установлено"
-          ]
-        },
-        "side_effects": [
-          "не отмечается"
-        ],
-        "withdrawal_days": 0
+        "dose_per_kg": 0
       },
       "fixed": {
-        "dose_per_kg": 12.0,
-        "dose_min": 9.6,
-        "dose_max": 14.4,
-        "contraindications": {
-          "pregnancy": false,
-          "lactation": false,
-          "young": false,
-          "warnings": [
-            "не установлено"
-          ]
-        },
-        "side_effects": [
-          "не отмечается"
-        ],
-        "withdrawal_days": 0
+        "dose_per_kg": 12.0
       }
     },
     {
       "id": 2270,
       "name": "Амит форте",
       "original": {
-        "dose_per_kg": 6.7,
-        "dose_min": 5.36,
-        "dose_max": 8.04,
         "contraindications": {
           "warnings": [
             "Больные и выздоравливающие животные, животные до 2 месяцев. Не применять кроликам. ТОКСИЧЕН для водных организмов."
@@ -174,18 +227,9 @@
           "lactation": false,
           "young": false,
           "old": false
-        },
-        "side_effects": [
-          "Местное раздражение кожи",
-          "Зуд (временный)",
-          "Вылизывание (приводит к слюнотечению)"
-        ],
-        "withdrawal_days": 0
+        }
       },
       "fixed": {
-        "dose_per_kg": 6.7,
-        "dose_min": 5.36,
-        "dose_max": 8.04,
         "contraindications": {
           "warnings": [
             "Больные и выздоравливающие животные, животные до 2 месяцев. Не применять кроликам. ТОКСИЧЕН для водных организмов.",
@@ -195,13 +239,112 @@
           "lactation": false,
           "young": false,
           "old": false
-        },
-        "side_effects": [
-          "Местное раздражение кожи",
-          "Зуд (временный)",
-          "Вылизывание (приводит к слюнотечению)"
-        ],
-        "withdrawal_days": 0
+        }
+      }
+    },
+    {
+      "id": 2349,
+      "name": "Гепатовекс К",
+      "original": {
+        "animal_specific": {
+          "Свиньи": {
+            "dose_per_kg": 0.05,
+            "dose_unit": "мл/кг",
+            "dose_min": 0.03,
+            "dose_max": 0.05,
+            "method": "внутримышечно",
+            "frequency": "1 раз в день, 3-5 дней",
+            "notes": "Мл/кг"
+          },
+          "Птица": {
+            "dose_per_kg": 0,
+            "dose_min": 0,
+            "dose_max": 0,
+            "dose_unit": "fixed",
+            "frequency": "2-3 раза в день",
+            "route": "внутрь",
+            "notes": "по инструкции (с кормом)",
+            "course_days": "5-10 дней"
+          },
+          "КРС": {
+            "dose_per_kg": 0.05,
+            "dose_unit": "мл/кг",
+            "dose_min": 0.03,
+            "dose_max": 0.05,
+            "method": "внутримышечно",
+            "frequency": "1 раз в день, 3-5 дней",
+            "notes": "1.5-3 мл на 50 кг. Мл/кг"
+          },
+          "Собаки": {
+            "dose_per_kg": 0.1,
+            "dose_unit": "мл/кг",
+            "dose_min": 0.05,
+            "dose_max": 0.1,
+            "method": "внутримышечно",
+            "frequency": "1 раз в день, 3-5 дней",
+            "notes": "Мл/кг"
+          },
+          "Кошки": {
+            "dose_per_kg": 0.1,
+            "dose_unit": "мл/кг",
+            "dose_min": 0.05,
+            "dose_max": 0.1,
+            "method": "внутримышечно",
+            "frequency": "1 раз в день",
+            "notes": "Мл/кг"
+          }
+        }
+      },
+      "fixed": {
+        "animal_specific": {
+          "Свиньи": {
+            "dose_per_kg": 0.05,
+            "dose_unit": "мл/кг",
+            "dose_min": 0.03,
+            "dose_max": 0.05,
+            "method": "внутримышечно",
+            "frequency": "1 раз в день, 3-5 дней",
+            "notes": "Мл/кг"
+          },
+          "Птица": {
+            "dose_per_kg": 35.0,
+            "dose_min": 0,
+            "dose_max": 0,
+            "dose_unit": "fixed",
+            "frequency": "2-3 раза в день",
+            "route": "внутрь",
+            "notes": "по инструкции (с кормом)",
+            "course_days": "5-10 дней",
+            "method": "внутрь"
+          },
+          "КРС": {
+            "dose_per_kg": 0.05,
+            "dose_unit": "мл/кг",
+            "dose_min": 0.03,
+            "dose_max": 0.05,
+            "method": "внутримышечно",
+            "frequency": "1 раз в день, 3-5 дней",
+            "notes": "1.5-3 мл на 50 кг. Мл/кг"
+          },
+          "Собаки": {
+            "dose_per_kg": 0.1,
+            "dose_unit": "мл/кг",
+            "dose_min": 0.05,
+            "dose_max": 0.1,
+            "method": "внутримышечно",
+            "frequency": "1 раз в день, 3-5 дней",
+            "notes": "Мл/кг"
+          },
+          "Кошки": {
+            "dose_per_kg": 0.1,
+            "dose_unit": "мл/кг",
+            "dose_min": 0.05,
+            "dose_max": 0.1,
+            "method": "внутримышечно",
+            "frequency": "1 раз в день",
+            "notes": "Мл/кг"
+          }
+        }
       }
     }
   ]

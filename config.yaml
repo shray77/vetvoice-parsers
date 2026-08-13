@@ -1,0 +1,202 @@
+# VetVoice Parsers — Configuration
+# =====================================================================
+# Этот файл управляет поведением всех парсеров.
+# Цель: быть вежливым к серверам (rate-limiting, UA, robots.txt)
+#       и не получить бан.
+#
+# Все парсеры читают этот файл автоматически.
+# Можно переопределить любые значения через переменные окружения
+# с префиксом VETVOICE_, например:
+#   VETVOICE_VETPROTOCOL_DELAY=2.0
+#   VETVOICE_GLOBAL_USER_AGENT="MyBot/1.0 (contact: me@example.com)"
+# =====================================================================
+
+# ---------- Глобальные настройки (применяются ко всем парсерам) ----------
+global:
+  # User-Agent: НЕ маскируемся под браузер — это плохая практика и быстрый путь к бану.
+  # Честный UA с контактом — лучший способ избежать блокировок.
+  # RFC 9110 рекомендует формат: "Name/Version (URL; contact)"
+  user_agent: "VetVoiceBot/1.0 (+https://github.com/shray77/vetvoice-parsers; research, non-commercial)"
+
+  # Заголовки, отправляемые с каждым запросом
+  headers:
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+    Accept-Language: "ru-RU,ru;q=0.9,en;q=0.8"
+    Accept-Encoding: "gzip, deflate"
+    Connection: "keep-alive"
+    Upgrade-Insecure-Requests: "1"
+
+  # Общие лимиты
+  timeout: 30              # секунд на один HTTP-запрос
+  max_retries: 3           # повторных попыток при 5xx/timeout
+  backoff_factor: 1.5      # экспоненциальная задержка: delay * backoff^attempt
+  retry_on_status: [500, 502, 503, 504]
+
+  # robots.txt compliance — обязательно для этичного парсинга
+  respect_robots_txt: true
+  # Если true — парсер проверит /robots.txt перед запросами и откажется
+  # ходить по запрещённым путям.
+
+  # Кеширование (опционально — снижает нагрузку на источники)
+  cache_enabled: true
+  cache_dir: ".cache"      # относительно текущей директории
+  cache_ttl_hours: 24      # 24 часа — данные обновляются редко
+
+  # Логирование
+  log_level: "INFO"        # DEBUG / INFO / WARNING / ERROR
+  log_format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+
+
+# ---------- Источник: Гален (ФГИС ВетИС, Россельхознадзор) ----------
+galen:
+  enabled: true
+  # SOAP endpoint и WSDL
+  endpoint: "https://api.vetrf.ru/platform/exportcenter/services/2.3/FMPRegistryService"
+  wsdl: "https://api.vetrf.ru/schema/platform/exportcenter/v2.3b-20240808/FMPRegistryService_v2.3.wsdl"
+
+  # Авторизация (получить в ЛК ВетИС.Паспорт)
+  # ⚠️ НЕ хардкодить! Только через env vars:
+  #   export VETRF_API_USER="..."
+  #   export VETRF_API_KEY="..."
+  api_user_env: "VETRF_API_USER"
+  api_key_env: "VETRF_API_KEY"
+
+  # Параметры выгрузки
+  page_size: 1000          # максимум по спецификации SOAP
+  delay: 1.0               # секунд между страницами
+  max_entries: null        # null = весь реестр
+
+  # ВГНКИ/Россельхознадзор относятся лояльно к научным запросам,
+  # но всё равно держим паузу.
+
+
+# ---------- Источник: vetprotocol.ru ----------
+vetprotocol:
+  enabled: true
+  base_url: "https://vetprotocol.ru"
+  list_url: "https://vetprotocol.ru/drug/"
+
+  # Rate-limiting: 2 запроса в секунду = 120/мин — вежливо
+  delay: 0.6               # секунд между запросами (~1.6 req/sec)
+  max_drugs: null          # null = все 434
+
+  # Парсинг
+  parse_animals: true      # извлекать видовые дозы
+  parse_warnings: true     # извлекать «(!)» предупреждения
+
+  # Что делать при 429 (Too Many Requests)
+  on_429_wait_seconds: 60  # подождать минуту и продолжить
+
+
+# ---------- Источник: vetlek.ru ----------
+vetlek:
+  enabled: true
+  base_url: "https://www.vetlek.ru"
+  directions_url: "https://www.vetlek.ru/directions/"
+
+  # vetlek работает на старом Apache, windows-1251 — не нагружаем сильно
+  delay: 0.7               # секунд между запросами (~1.4 req/sec)
+  max_directions: null     # null = все 1337
+
+  # Алфавитный указатель
+  alphabet: "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЭЮЯ"
+  encoding: "cp1251"       # сайт отдаёт windows-1251
+
+  # Парсинг секций инструкции
+  sections:
+    - composition
+    - pharmacology
+    - indications
+    - contraindications
+    - side_effects
+    - dosage
+    - special_notes
+    - storage
+
+
+# ---------- Источник: vidal.ru/veterinar ----------
+vidal:
+  enabled: true
+  base_url: "https://www.vidal.ru"
+  vet_base_url: "https://www.vidal.ru/veterinar"
+
+  # vidal строгий к ботам — ставим большую задержку
+  delay: 2.0               # секунд между запросами (0.5 req/sec)
+  max_drugs: null
+
+  # Алфавитный указатель
+  alphabet: "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЭЮЯ"
+  max_pages_per_letter: 100
+
+  # vidal может отдавать 403 — тогда ждём
+  on_403_wait_seconds: 300
+  on_429_wait_seconds: 600
+
+
+# ---------- Источник: reestrinform.ru ----------
+reestrinform:
+  enabled: false           # по умолчанию выключен — Cloudflare блокирует
+  base_url: "https://reestrinform.ru"
+  list_url: "https://reestrinform.ru/reestr-veterinarnykh-preparatov-rf.html"
+
+  # Для обхода Cloudflare Browser-Check нужен playwright или прокси
+  use_playwright: false    # true = использовать playwright (нужен pip install playwright + playwright install chromium)
+  playwright_fallback: true # если requests дал 503, попробовать playwright
+
+  delay: 2.0
+  max_entries: null
+
+
+# ---------- Валидатор ----------
+validator:
+  # Что проверять
+  checks:
+    dose_per_kg: true              # глобальная доза
+    dose_per_kg_by_animal: true    # ⭐ видовая разница доз (animal_specific)
+    side_effects: true
+    contraindications_pregnancy: true
+    contraindications_lactation: true
+    withdrawal_days: true
+    form_match: true               # лекарственная форма
+    inn_match: true                # МНН совпадает
+
+  # Пороги
+  dose_tolerance: 0.30             # 30% — допустимое расхождение в дозе
+  realistic_dose_min: 0.001        # мг/кг
+  realistic_dose_max: 100.0        # мг/кг (больше — скорее всего разовая доза)
+
+  # Безопасность применения исправлений
+  apply_fixes: true
+  apply_severity: ["error", "warning"]  # какие severity применять
+  # ⚠️ Никогда не перезаписываем существующие значения — только заполняем пустые
+  overwrite_existing: false
+
+  # Видовая разница доз — основной фокус
+  # Когда vetprotocol/vetlek указывают дозу для конкретного животного,
+  # а в vetvoice в animal_specific этого животного нет — добавляем.
+  # Если есть — сравниваем и помечаем расхождение.
+  animal_specific:
+    enabled: true
+    animals_to_check:
+      - "Собаки"
+      - "Кошки"
+      - "КРС"
+      - "МРС"
+      - "Свиньи"
+      - "Лошади"
+      - "Птица"
+      - "Кролики"
+      - "Пушные звери"
+      - "Пчёлы"
+    # Когда дозы в animal_specific разные для разных животных,
+    # а в vetvoice dose_per_kg стоит одно значение — это ошибка.
+    flag_single_dose_for_multi_animal: true
+
+
+# ---------- Путь к drugs_calc.json (можно переопределить через env) ----------
+vetvoice:
+  drugs_calc_path: null    # null = брать из ../vetvoice_repo/assets/data/drugs_calc.json
+                           # или через env VETVOICE_DRUGS_CALC_PATH
+
+  # Файлы источников (куда парсеры сохраняют)
+  output_dir: "download"

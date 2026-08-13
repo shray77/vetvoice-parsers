@@ -13,12 +13,19 @@
 
 Этот парсер извлекает структурированные данные и приводит их к формату,
 совместимому с drugs_calc.json из репозитория vetvoice.
+
+Конфигурация: см. config.yaml (секция vetprotocol).
+Все настройки можно переопределить через env vars:
+    VETVOICE_VETPROTOCOL_DELAY=2.0
+    VETVOICE_GLOBAL_USER_AGENT="MyBot/1.0"
 """
 
 from __future__ import annotations
 
 import logging
+import os
 import re
+import sys
 import time
 from dataclasses import dataclass, field, asdict
 from typing import Iterator, List, Optional, Dict
@@ -27,24 +34,21 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 
+# Подключаем общий модуль конфигурации
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PARENT_DIR = os.path.dirname(_SCRIPT_DIR)  # scripts/
+if _PARENT_DIR not in sys.path:
+    sys.path.insert(0, _PARENT_DIR)
+from config import get_config, make_session, can_fetch, RateLimiter  # noqa: E402
+
 log = logging.getLogger("vetprotocol_parser")
-if not log.handlers:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
+# Дефолты (если config.yaml не найден)
 BASE_URL = "https://vetprotocol.ru"
 DRUG_LIST_URL = f"{BASE_URL}/drug/"
-
-DEFAULT_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    ),
-    "Accept": "text/html,application/xhtml+xml",
-    "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
-}
 DEFAULT_TIMEOUT = 30
-DEFAULT_DELAY = 0.5
+DEFAULT_DELAY = 0.6
 
 
 # ---------------------------------------------------------------------------
@@ -87,15 +91,48 @@ class VetprotocolDrug:
 # ---------------------------------------------------------------------------
 
 class VetprotocolClient:
-    def __init__(self, delay: float = DEFAULT_DELAY):
-        self.session = requests.Session()
-        self.session.headers.update(DEFAULT_HEADERS)
-        self.delay = delay
+    def __init__(
+        self,
+        delay: Optional[float] = None,
+        config=None,
+    ):
+        # Загрузить конфиг
+        self.cfg = config or get_config()
+        vp_cfg = self.cfg.vetprotocol
+
+        # Параметры сессии
+        self.session = make_session(self.cfg, "vetprotocol")
+        self.base_url = vp_cfg.base_url
+        self.list_url = vp_cfg.list_url
+        self.delay = delay if delay is not None else vp_cfg.delay
+        self.timeout = self.cfg.global_config.timeout
+        self.on_429_wait = vp_cfg.on_429_wait_seconds
+        self.rate_limiter = RateLimiter(self.delay)
+        self._stopped = False  # флаг «нас попросили остановиться»
 
     def _get(self, url: str) -> Optional[str]:
+        # Проверить robots.txt
+        if not can_fetch(self.cfg, self.session, url):
+            log.warning("robots.txt запрещает: %s — пропускаю", url)
+            return None
+        # Rate limit
+        self.rate_limiter.wait()
         try:
-            r = self.session.get(url, timeout=DEFAULT_TIMEOUT)
+            r = self.session.get(url, timeout=self.timeout)
+            # 429 Too Many Requests — подождать и продолжить
+            if r.status_code == 429:
+                log.warning(
+                    "429 Too Many Requests на %s — жду %d сек",
+                    url, self.on_429_wait,
+                )
+                time.sleep(self.on_429_wait)
+                self.rate_limiter.wait()
+                r = self.session.get(url, timeout=self.timeout)
             if r.status_code == 404:
+                return None
+            if r.status_code == 403:
+                log.warning("403 Forbidden на %s — возможно бан", url)
+                self._stopped = True
                 return None
             r.raise_for_status()
             return r.text
@@ -107,7 +144,7 @@ class VetprotocolClient:
 
     def list_drug_slugs(self) -> List[str]:
         """Получить список всех slug-ов препаратов со страницы /drug/."""
-        html = self._get(DRUG_LIST_URL)
+        html = self._get(self.list_url)
         if not html:
             return []
         soup = BeautifulSoup(html, "html.parser")
@@ -131,7 +168,7 @@ class VetprotocolClient:
 
     def fetch_drug(self, slug: str) -> Optional[VetprotocolDrug]:
         """Получить и распарсить страницу препарата."""
-        url = f"{BASE_URL}/drug/{slug}"
+        url = f"{self.base_url}/drug/{slug}"
         html = self._get(url)
         if not html:
             return None
@@ -142,15 +179,22 @@ class VetprotocolClient:
         self, max_drugs: Optional[int] = None
     ) -> Iterator[VetprotocolDrug]:
         """Итеративно пройти все препараты."""
+        if self._stopped:
+            log.error("Парсер остановлен: получен 403 — возможно бан")
+            return
         slugs = self.list_drug_slugs()
+        if max_drugs is None:
+            max_drugs = self.cfg.vetprotocol.max_drugs
         if max_drugs:
             slugs = slugs[:max_drugs]
         for i, slug in enumerate(slugs, 1):
+            if self._stopped:
+                log.error("Остановка по 403 на [%d/%d]", i, len(slugs))
+                break
             log.info("[%d/%d] %s", i, len(slugs), slug)
             drug = self.fetch_drug(slug)
             if drug:
                 yield drug
-            time.sleep(self.delay)
 
 
 # ---------------------------------------------------------------------------
@@ -398,8 +442,12 @@ def _parse_dose_line(text: str, animal_hint: str = "") -> VetprotocolDose:
     if not dose.animal and animal_match:
         dose.animal = _normalize_animal(animal_match.group(0))
 
+    # Ограничим текст первыми 200 символами — иначе после «;» может быть
+    # много лишнего, и парсер возьмёт дозу из следующего блока.
+    parse_text = text[:200]
+
     # Доза (мг/кг, мл/кг, ...)
-    m = _DOSE_RE.search(text)
+    m = _DOSE_RE.search(parse_text)
     if m:
         try:
             dose.dose_per_kg = float(m.group(1).replace(",", "."))
@@ -410,7 +458,7 @@ def _parse_dose_line(text: str, animal_hint: str = "") -> VetprotocolDose:
             pass
 
     # Если в тексте диапазон «25-50 мг/кг», берём максимум
-    range_m = re.search(r"(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)\s*(мг|мл|мкг|МЕ|г)\s*/?\s*(кг)?", text, re.I)
+    range_m = re.search(r"(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)\s*(мг|мл|мкг|МЕ|г)\s*/?\s*(кг)?", parse_text, re.I)
     if range_m:
         try:
             dose.dose_per_kg = float(range_m.group(2).replace(",", "."))
@@ -421,26 +469,26 @@ def _parse_dose_line(text: str, animal_hint: str = "") -> VetprotocolDose:
             pass
 
     # Кратность
-    freq_m = _FREQ_RE.search(text)
+    freq_m = _FREQ_RE.search(parse_text)
     if freq_m:
         dose.frequency = freq_m.group(1).strip()
 
     # Путь введения
-    route_m = _ROUTE_RE.search(text)
+    route_m = _ROUTE_RE.search(parse_text)
     if route_m:
         dose.route = route_m.group(1).lower()
 
     # Курс
-    course_m = _COURSE_RE.search(text)
+    course_m = _COURSE_RE.search(parse_text)
     if course_m:
         dose.course_days = course_m.group(1).strip()
 
     # Показание (часть после двоеточия или "для ...")
-    if ":" in text:
-        parts = text.split(":", 1)
+    if ":" in parse_text:
+        parts = parse_text.split(":", 1)
         if len(parts) == 2 and len(parts[1].strip()) < 200:
             dose.indication = parts[1].strip()
-    m_for = re.search(r"\b(?:для|при)\s+([^,.;:]{5,80})", text, re.I)
+    m_for = re.search(r"\b(?:для|при)\s+([^,.;:]{5,80})", parse_text, re.I)
     if m_for and not dose.indication:
         dose.indication = m_for.group(1).strip()
 
@@ -458,16 +506,35 @@ def fetch_all_drugs(
     import json
 
     client = VetprotocolClient()
-    log.info("Начинаем выгрузку препаратов с vetprotocol.ru")
+    cfg = client.cfg.vetprotocol
+    log.info(
+        "Начинаем выгрузку препаратов с vetprotocol.ru (delay=%.2fs, UA=%s)",
+        client.delay, client.cfg.global_config.user_agent[:60],
+    )
     drugs = []
     for drug in client.iter_all_drugs(max_drugs=max_drugs):
         drugs.append(drug.to_dict())
+        # Промежуточное сохранение каждые 20 препаратов
+        if len(drugs) % 20 == 0:
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "source": "vetprotocol.ru",
+                        "source_url": client.base_url,
+                        "total_drugs": len(drugs),
+                        "drugs": drugs,
+                    },
+                    f,
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            log.info("Промежуточное сохранение: %d препаратов", len(drugs))
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(
             {
                 "source": "vetprotocol.ru",
-                "source_url": BASE_URL,
+                "source_url": client.base_url,
                 "total_drugs": len(drugs),
                 "drugs": drugs,
             },
@@ -491,16 +558,26 @@ if __name__ == "__main__":
     p.add_argument("--fetch", metavar="SLUG", help="Скачать один препарат")
     p.add_argument("--fetch-all", metavar="OUTPUT_JSON", help="Скачать все препараты в JSON")
     p.add_argument("--max", type=int, default=None, help="Лимит препаратов")
+    p.add_argument("--delay", type=float, default=None,
+                   help="Переопределить delay (секунд между запросами)")
+    p.add_argument("--config", default=None, help="Путь к config.yaml")
     args = p.parse_args()
 
+    if args.config:
+        from pathlib import Path
+        from config import load_config
+        load_config(Path(args.config))
+
+    client_kwargs = {"delay": args.delay} if args.delay else {}
+
     if args.list:
-        c = VetprotocolClient()
+        c = VetprotocolClient(**client_kwargs)
         slugs = c.list_drug_slugs()
         print(f"Всего slug-ов: {len(slugs)}")
         for s in slugs[:50]:
             print(f"  {s}")
     elif args.fetch:
-        c = VetprotocolClient()
+        c = VetprotocolClient(**client_kwargs)
         d = c.fetch_drug(args.fetch)
         if d:
             print(d.to_dict())

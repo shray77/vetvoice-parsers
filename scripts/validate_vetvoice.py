@@ -259,6 +259,359 @@ def _is_realistic_dose(value: float) -> bool:
     return 0.001 <= value <= 100.0
 
 
+# ---------------------------------------------------------------------------
+# Видовая разница доз — главная фича валидатора
+# ---------------------------------------------------------------------------
+#
+# В drugs_calc.json у каждого препарата есть:
+#   - dose_per_kg (глобальная доза)
+#   - animals: [Собаки, Кошки]  (какие виды вообще применимы)
+#   - animal_specific: {
+#       "Собаки": { dose_per_kg, dose_min, dose_max, method, frequency, notes },
+#       "Кошки":  { ... }
+#     }
+#
+# Если в vetvoice drug.animals = ["Собаки", "Кошки"], но dose_per_kg один —
+# это подозрительно: дозы для собаки и кошки обычно различаются.
+#
+# vetprotocol хранит дозы с пометкой животного, например:
+#   { animal: "Собаки", dose_per_kg: 50, ... }
+#   { animal: "Кошки", dose_per_kg: 25, ... }
+#
+# Алгоритм:
+#   1. Группируем дозы vetprotocol по животным (берём максимум из диапазона).
+#   2. Для каждого животного из vetprotocol:
+#      - Если в vetvoice.animal_specific[animal] нет дозы → добавляем (warning).
+#      - Если есть и отличается >30% → отмечаем расхождение (info, ручная проверка).
+#   3. Если у vetvoice drug.animals несколько видов, а animal_specific пустой
+#      или dose_per_kg один на все → warning «нужны видовые дозы».
+# ---------------------------------------------------------------------------
+
+# Соответствие вариантов написания животных в vetlek текстах и
+# каноничных имён в vetvoice
+_VL_ANIMAL_ALIASES = {
+    "Собаки": ["собак", "собаки", "собаку", "собакам"],
+    "Кошки":  ["кошек", "кошки", "кошку", "кошкам"],
+    "КРС":    ["крс", "крупного рогатого скота", "крупному рогатому скоту",
+              "крупным рогатым скотом", "коров", "коровам", "тёлк", "телят",
+              "теленка", "теленку", "быков"],
+    "МРС":    ["мрс", "мелкого рогатого скота", "овец", "овцам", "овц",
+              "коз", "козам"],
+    "Свиньи": ["свин", "свиней", "свиньи", "свинью", "свиномат",
+              "порос", "поросят", "поросятам"],
+    "Лошади": ["лошад", "лошадей", "лошади", "лошадь", "лошадям",
+              "коней", "коням"],
+    "Птица":  ["птиц", "птицы", "птицу", "птицам", "кур", "курам",
+              "цыплят", "цыплятам", "гусей", "гусей", "уток", "уткам",
+              "индюш", "пернат"],
+    "Кролики": ["кролик", "кроликов", "кролика", "кроликам"],
+    "Пушные звери": ["пушн", "пушных", "пушным", "норк", "песец",
+                    "лисиц", "собол"],
+    "Пчёлы": ["пчёл", "пчел", "пчёлы", "пчелам", "пчелин"],
+}
+
+
+def _find_animals_in_text(text: str) -> List[str]:
+    """Найти упоминания видов животных в тексте vetlek."""
+    if not text:
+        return []
+    low = text.lower()
+    found = []
+    for canonical, aliases in _VL_ANIMAL_ALIASES.items():
+        if any(a in low for a in aliases):
+            found.append(canonical)
+    return found
+
+
+def _extract_vl_dosages_by_animal(text: str) -> Dict[str, List[float]]:
+    """Извлечь дозы из текста vetlek с привязкой к животным.
+
+    Ветlek-инструкции часто структурированы как:
+      «Собакам и кошкам вводят внутримышечно в дозе 0,1 мл/кг»
+      или
+      «КРС — 5 мл на 100 кг массы, МРС — 2 мл»
+
+    Парсим по предложениям, ищем упоминания животных и ближайшие числа.
+    """
+    if not text:
+        return {}
+    # Разбиваем на предложения/части по «;», «.», переносу
+    parts = re.split(r"[;.]\s+|\n", text)
+    result: Dict[str, List[float]] = {}
+    for part in parts:
+        animals = _find_animals_in_text(part)
+        if not animals:
+            continue
+        # Ищем числа с единицами
+        matches = re.finditer(
+            r"(\d+(?:[.,]\d+)?)\s*(мг|мл|мкг|МЕ|г)\s*/?\s*(кг|м²|м2)?",
+            part, re.I,
+        )
+        doses = []
+        for m in matches:
+            try:
+                val = float(m.group(1).replace(",", "."))
+                # только мг/кг (если есть явный «/кг»)
+                if m.group(3) and "кг" in m.group(3).lower():
+                    if _is_realistic_dose(val):
+                        doses.append(val)
+            except ValueError:
+                pass
+        if doses:
+            for animal in animals:
+                result.setdefault(animal, []).extend(doses)
+    return result
+
+
+def _group_vp_doses_by_animal(vp_drug: dict) -> Dict[str, Dict[str, Any]]:
+    """Сгруппировать дозы vetprotocol по животным.
+
+    Возвращает {animal: {dose_per_kg, dose_unit, frequency, route, course_days,
+                         indication, count}}
+    Если для животного несколько доз — берём среднее с min/max.
+    """
+    result: Dict[str, Dict[str, Any]] = {}
+    for d in vp_drug.get("doses", []):
+        animal = d.get("animal", "")
+        if not animal:
+            continue
+        # Нормализуем имя животного
+        animal_norm = _normalize_vv_animal(animal)
+        dose = d.get("dose_per_kg")
+        if dose is None:
+            continue
+        if animal_norm not in result:
+            result[animal_norm] = {
+                "doses": [],
+                "dose_unit": d.get("dose_unit", ""),
+                "frequency": d.get("frequency", ""),
+                "route": d.get("route", ""),
+                "course_days": d.get("course_days", ""),
+                "indications": [],
+            }
+        result[animal_norm]["doses"].append(dose)
+        if d.get("indication"):
+            result[animal_norm]["indications"].append(d["indication"])
+    # Усредняем
+    for animal, info in result.items():
+        doses = info.pop("doses")
+        if doses:
+            info["dose_per_kg"] = max(doses)  # берём верхнюю границу диапазона
+            info["dose_min"] = min(doses)
+            info["dose_max"] = max(doses)
+            info["count"] = len(doses)
+        else:
+            info["dose_per_kg"] = None
+            info["count"] = 0
+        info["indications"] = list(set(info["indications"]))[:3]
+    return result
+
+
+def _normalize_vv_animal(name: str) -> str:
+    """Нормализовать имя животного к каноничному виду vetvoice."""
+    if not name:
+        return ""
+    name = name.strip()
+    # прямой поиск по алиасам
+    low = name.lower()
+    for canonical, aliases in _VL_ANIMAL_ALIASES.items():
+        for alias in aliases:
+            if alias in low:
+                return canonical
+    # Если не нашли — возвращаем как есть (возможно, уже каноничное)
+    return name
+
+
+def check_dosage_by_animal(
+    vv_drug: dict, vp_drug: Optional[dict], vl_drug: Optional[dict],
+    discrepancies: List[Discrepancy], drug_id: int, drug_name: str,
+) -> None:
+    """⭐ Главная проверка: видовая разница доз.
+
+    Сравнивает vetprotocol/vetlek дозы по животным с vetvoice.animal_specific.
+    """
+    vv_animals = vv_drug.get("animals", []) or []
+    vv_animal_specific = vv_drug.get("animal_specific", {}) or {}
+    vv_dose_per_kg = vv_drug.get("dose_per_kg")
+
+    # 1) Если в vetvoice указано несколько животных, но dose_per_kg один
+    # и animal_specific пустой или содержит одно значение — это подозрительно
+    if (len(vv_animals) > 1 and vv_dose_per_kg
+            and (not vv_animal_specific or len(vv_animal_specific) < 2)):
+        discrepancies.append(Discrepancy(
+            drug_id=drug_id, drug_name=drug_name,
+            field="animal_specific.missing",
+            vetvoice_value={
+                "animals": vv_animals,
+                "dose_per_kg": vv_dose_per_kg,
+                "animal_specific_keys": list(vv_animal_specific.keys()),
+            },
+            source_value=None,
+            source="self",
+            severity="warning",
+            suggested_fix=None,
+            notes=f"Препарат указан для {len(vv_animals)} видов "
+                  f"({', '.join(vv_animals)}), но animal_specific неполный. "
+                  f"Дозировка для разных видов часто различается — "
+                  f"нужно заполнить animal_specific для каждого вида.",
+        ))
+
+    # 2) Сравнение с vetprotocol: группируем дозы vetprotocol по животным
+    if vp_drug:
+        vp_by_animal = _group_vp_doses_by_animal(vp_drug)
+        for animal, vp_info in vp_by_animal.items():
+            vp_dose = vp_info.get("dose_per_kg")
+            if vp_dose is None:
+                continue
+            is_realistic = _is_realistic_dose(vp_dose)
+            unit_has_per_kg = "/" in vp_info.get("dose_unit", "") and \
+                              "кг" in vp_info.get("dose_unit", "")
+
+            # Ищем это животное в animal_specific vetvoice
+            vv_spec = vv_animal_specific.get(animal)
+            if vv_spec:
+                # В animal_specific уже есть доза для этого животного
+                vv_animal_dose = vv_spec.get("dose_per_kg")
+                if vv_animal_dose in (None, 0):
+                    # доза пустая — предложим заполнить
+                    if is_realistic and unit_has_per_kg:
+                        discrepancies.append(Discrepancy(
+                            drug_id=drug_id, drug_name=drug_name,
+                            field=f"animal_specific.{animal}.dose_per_kg",
+                            vetvoice_value=vv_animal_dose,
+                            source_value=vp_dose,
+                            source="vetprotocol",
+                            severity="warning",
+                            suggested_fix={
+                                "dose_per_kg": vp_dose,
+                                "dose_unit": vp_info.get("dose_unit", "мг/кг"),
+                                "frequency": vp_info.get("frequency", ""),
+                                "method": vp_info.get("route", ""),
+                                "course_days": vp_info.get("course_days", ""),
+                            },
+                            notes=f"vetprotocol знает дозу для {animal}: "
+                                  f"{vp_dose} {vp_info.get('dose_unit', '')}, "
+                                  f"а в vetvoice animal_specific.{animal}.dose_per_kg "
+                                  f"пусто.",
+                        ))
+                elif not dose_values_close(vv_animal_dose, vp_dose, 0.3):
+                    # Дозы различаются — ручная проверка
+                    discrepancies.append(Discrepancy(
+                        drug_id=drug_id, drug_name=drug_name,
+                        field=f"animal_specific.{animal}.dose_per_kg",
+                        vetvoice_value=vv_animal_dose,
+                        source_value=vp_dose,
+                        source="vetprotocol",
+                        severity="info" if not is_realistic else "warning",
+                        suggested_fix=None,  # не перезаписываем
+                        notes=f"Расхождение для {animal}: "
+                              f"vetvoice={vv_animal_dose}, "
+                              f"vetprotocol={vp_dose} — "
+                              f"требуется ручная проверка",
+                    ))
+            else:
+                # В animal_specific нет этого животного — предложим добавить
+                if animal in vv_animals:
+                    # Если в vv_animals это животное есть, а в animal_specific
+                    # нет — это явный пробел
+                    if is_realistic and unit_has_per_kg:
+                        discrepancies.append(Discrepancy(
+                            drug_id=drug_id, drug_name=drug_name,
+                            field=f"animal_specific.{animal}",
+                            vetvoice_value=None,
+                            source_value={
+                                "dose_per_kg": vp_dose,
+                                "dose_unit": vp_info.get("dose_unit", "мг/кг"),
+                                "frequency": vp_info.get("frequency", ""),
+                                "method": vp_info.get("route", ""),
+                                "course_days": vp_info.get("course_days", ""),
+                                "notes": "; ".join(vp_info.get("indications", [])),
+                            },
+                            source="vetprotocol",
+                            severity="warning",
+                            suggested_fix={
+                                "animal": animal,
+                                "data": {
+                                    "dose_per_kg": vp_dose,
+                                    "dose_unit": vp_info.get("dose_unit", "мг/кг"),
+                                    "frequency": vp_info.get("frequency", ""),
+                                    "method": vp_info.get("route", ""),
+                                    "course_days": vp_info.get("course_days", ""),
+                                    "notes": "; ".join(vp_info.get("indications", [])),
+                                },
+                            },
+                            notes=f"vetvoice.animals содержит '{animal}', "
+                                  f"но в animal_specific его нет. "
+                                  f"vetprotocol указывает дозу {vp_dose} "
+                                  f"{vp_info.get('dose_unit', '')}.",
+                        ))
+                else:
+                    # Этого животного вообще нет в vv_animals, но vetprotocol
+                    # знает его дозу — возможно, vetvoice неполный
+                    if is_realistic and unit_has_per_kg:
+                        discrepancies.append(Discrepancy(
+                            drug_id=drug_id, drug_name=drug_name,
+                            field=f"animals.missing.{animal}",
+                            vetvoice_value=vv_animals,
+                            source_value=animal,
+                            source="vetprotocol",
+                            severity="info",
+                            suggested_fix=None,
+                            notes=f"vetprotocol знает дозу для {animal} "
+                                  f"({vp_dose} {vp_info.get('dose_unit', '')}), "
+                                  f"но в vetvoice.animals этого вида нет.",
+                        ))
+
+    # 3) Парсим vetlek на видовые дозы
+    if vl_drug and vl_drug.get("dosage"):
+        vl_by_animal = _extract_vl_dosages_by_animal(vl_drug["dosage"])
+        for animal, doses in vl_by_animal.items():
+            if not doses:
+                continue
+            vp_dose_max = max(doses)
+            vv_spec = vv_animal_specific.get(animal)
+            if vv_spec and vv_spec.get("dose_per_kg") in (None, 0):
+                # В animal_specific доза пустая — предложим
+                discrepancies.append(Discrepancy(
+                    drug_id=drug_id, drug_name=drug_name,
+                    field=f"animal_specific.{animal}.dose_per_kg",
+                    vetvoice_value=vv_spec.get("dose_per_kg"),
+                    source_value=vp_dose_max,
+                    source="vetlek",
+                    severity="warning",
+                    suggested_fix={
+                        "dose_per_kg": vp_dose_max,
+                        "dose_unit": "мг/кг",
+                    },
+                    notes=f"vetlek указывает дозу для {animal}: "
+                          f"~{vp_dose_max} мг/кг "
+                          f"(из текста: {vl_drug['dosage'][:150]})",
+                ))
+            elif not vv_spec and animal in vv_animals:
+                # В animal_specific нет этого животного — предложим добавить
+                discrepancies.append(Discrepancy(
+                    drug_id=drug_id, drug_name=drug_name,
+                    field=f"animal_specific.{animal}",
+                    vetvoice_value=None,
+                    source_value={
+                        "dose_per_kg": vp_dose_max,
+                        "dose_unit": "мг/кг",
+                    },
+                    source="vetlek",
+                    severity="warning",
+                    suggested_fix={
+                        "animal": animal,
+                        "data": {
+                            "dose_per_kg": vp_dose_max,
+                            "dose_unit": "мг/кг",
+                        },
+                    },
+                    notes=f"vetvoice.animals содержит '{animal}', "
+                          f"но в animal_specific его нет. "
+                          f"vetlek указывает ~{vp_dose_max} мг/кг.",
+                ))
+
+
 def check_dosage(
     vv_drug: dict, vp_drug: Optional[dict], vl_drug: Optional[dict],
     discrepancies: List[Discrepancy], drug_id: int, drug_name: str,
@@ -545,6 +898,9 @@ def validate(
         # Проверяем поля
         check_dosage(vv, vp_match, vl_match,
                      report.discrepancies, drug_id, drug_name)
+        # ⭐ Видовая разница доз — главное
+        check_dosage_by_animal(vv, vp_match, vl_match,
+                                report.discrepancies, drug_id, drug_name)
         check_side_effects(vv, vp_match, vl_match,
                            report.discrepancies, drug_id, drug_name)
         check_contraindications(vv, vp_match, vl_match,
@@ -639,6 +995,37 @@ def apply_fixes(
                     if warn_text not in c.get("warnings", []):
                         c.setdefault("warnings", []).append(warn_text)
                     changed = True
+        elif len(field_path) == 2 and field_path[0] == "animal_specific":
+            # ⭐ Добавление нового животного в animal_specific
+            # suggested_fix = {"animal": "Собаки", "data": {...}}
+            animal = field_path[1]
+            if isinstance(d.suggested_fix, dict) and "animal" in d.suggested_fix:
+                animal = d.suggested_fix["animal"]
+                data = d.suggested_fix.get("data", {})
+            else:
+                data = d.suggested_fix if isinstance(d.suggested_fix, dict) else {}
+            if not drug.get("animal_specific"):
+                drug["animal_specific"] = {}
+            if animal not in drug["animal_specific"]:
+                drug["animal_specific"][animal] = data
+                changed = True
+        elif (len(field_path) == 3 and field_path[0] == "animal_specific"
+              and field_path[2] == "dose_per_kg"):
+            # ⭐ Заполняем пустую дозу внутри animal_specific[animal]
+            animal = field_path[1]
+            if not drug.get("animal_specific"):
+                drug["animal_specific"] = {}
+            spec = drug["animal_specific"].get(animal) or {}
+            if spec.get("dose_per_kg") in (None, 0):
+                # suggested_fix = {dose_per_kg, dose_unit, frequency, ...}
+                if isinstance(d.suggested_fix, dict):
+                    for k, v in d.suggested_fix.items():
+                        if v and not spec.get(k):
+                            spec[k] = v
+                else:
+                    spec["dose_per_kg"] = d.suggested_fix
+                drug["animal_specific"][animal] = spec
+                changed = True
 
         if changed:
             fixes_applied += 1

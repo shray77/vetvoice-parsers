@@ -20,12 +20,16 @@
 
 Эти данные используются для валидации drugs_calc.json: дозировки,
 побочные действия, противопоказания, состав.
+
+Конфигурация: см. config.yaml (секция vetlek).
 """
 
 from __future__ import annotations
 
 import logging
+import os
 import re
+import sys
 import time
 from dataclasses import dataclass, field, asdict
 from typing import Iterator, List, Optional, Dict
@@ -34,24 +38,21 @@ from urllib.parse import urljoin, parse_qs, urlparse
 import requests
 from bs4 import BeautifulSoup
 
+# Подключаем общий модуль конфигурации
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PARENT_DIR = os.path.dirname(_SCRIPT_DIR)
+if _PARENT_DIR not in sys.path:
+    sys.path.insert(0, _PARENT_DIR)
+from config import get_config, make_session, can_fetch, RateLimiter  # noqa: E402
+
 log = logging.getLogger("vetlek_parser")
-if not log.handlers:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
+# Дефолты (если config.yaml не найден)
 BASE_URL = "https://www.vetlek.ru"
 DIRECTIONS_URL = f"{BASE_URL}/directions/"
-
-DEFAULT_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    ),
-    "Accept": "text/html,application/xhtml+xml",
-    "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
-}
 DEFAULT_TIMEOUT = 30
-DEFAULT_DELAY = 0.5
+DEFAULT_DELAY = 0.7
 
 
 # ---------------------------------------------------------------------------
@@ -85,20 +86,48 @@ class VetlekInstruction:
 # ---------------------------------------------------------------------------
 
 class VetlekClient:
-    def __init__(self, delay: float = DEFAULT_DELAY):
-        self.session = requests.Session()
-        self.session.headers.update(DEFAULT_HEADERS)
-        self.delay = delay
+    def __init__(
+        self,
+        delay: Optional[float] = None,
+        config=None,
+    ):
+        self.cfg = config or get_config()
+        vl_cfg = self.cfg.vetlek
+
+        self.session = make_session(self.cfg, "vetlek")
+        self.base_url = vl_cfg.base_url
+        self.directions_url = vl_cfg.directions_url
+        self.delay = delay if delay is not None else vl_cfg.delay
+        self.timeout = self.cfg.global_config.timeout
+        self.encoding = vl_cfg.encoding
+        self.alphabet = vl_cfg.alphabet
+        self.rate_limiter = RateLimiter(self.delay)
+        self._stopped = False
 
     def _get(self, url: str) -> Optional[str]:
+        if not can_fetch(self.cfg, self.session, url):
+            log.warning("robots.txt запрещает: %s — пропускаю", url)
+            return None
+        self.rate_limiter.wait()
         try:
-            r = self.session.get(url, timeout=DEFAULT_TIMEOUT)
+            r = self.session.get(url, timeout=self.timeout)
+            if r.status_code == 429:
+                log.warning("429 Too Many Requests на %s — жду 60 сек", url)
+                time.sleep(60)
+                self.rate_limiter.wait()
+                r = self.session.get(url, timeout=self.timeout)
             if r.status_code == 404:
+                return None
+            if r.status_code == 403:
+                log.warning("403 Forbidden на %s — возможно бан", url)
+                self._stopped = True
                 return None
             r.raise_for_status()
             # vetlek отдаёт windows-1251
-            if r.encoding and r.encoding.lower() in ("windows-1251", "cp1251", "iso-8859-1"):
-                r.encoding = "cp1251"
+            if r.encoding and r.encoding.lower() in (
+                "windows-1251", "cp1251", "iso-8859-1",
+            ):
+                r.encoding = self.encoding
             return r.text
         except Exception as e:
             log.warning("GET %s failed: %s", url, e)
@@ -114,11 +143,11 @@ class VetlekClient:
         """
         all_ids: List[str] = []
         # Главная страница + все буквы алфавита
-        urls = [DIRECTIONS_URL]
-        for ch in "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЭЮЯ":
+        urls = [self.directions_url]
+        for ch in self.alphabet:
             enc = ch.encode("cp1251").hex().upper()
             enc_pct = "%" + "%".join(enc[i:i+2] for i in range(0, len(enc), 2))
-            urls.append(f"{DIRECTIONS_URL}?char={enc_pct}")
+            urls.append(f"{self.directions_url}?char={enc_pct}")
 
         for url in urls:
             html = self._get(url)
@@ -146,7 +175,7 @@ class VetlekClient:
         return unique
 
     def fetch_direction(self, direction_id: str) -> Optional[VetlekInstruction]:
-        url = f"{DIRECTIONS_URL}?id={direction_id}"
+        url = f"{self.directions_url}?id={direction_id}"
         html = self._get(url)
         if not html:
             return None
@@ -155,15 +184,22 @@ class VetlekClient:
     def iter_all_directions(
         self, max_directions: Optional[int] = None
     ) -> Iterator[VetlekInstruction]:
+        if self._stopped:
+            log.error("Парсер остановлен: получен 403 — возможно бан")
+            return
         ids = self.list_direction_ids()
+        if max_directions is None:
+            max_directions = self.cfg.vetlek.max_directions
         if max_directions:
             ids = ids[:max_directions]
         for i, did in enumerate(ids, 1):
+            if self._stopped:
+                log.error("Остановка по 403 на [%d/%d]", i, len(ids))
+                break
             log.info("[%d/%d] direction %s", i, len(ids), did)
             instr = self.fetch_direction(did)
             if instr:
                 yield instr
-            time.sleep(self.delay)
 
 
 # ---------------------------------------------------------------------------
@@ -408,16 +444,34 @@ def fetch_all_directions(
     import json
 
     client = VetlekClient()
-    log.info("Начинаем выгрузку инструкций с vetlek.ru")
+    log.info(
+        "Начинаем выгрузку инструкций с vetlek.ru (delay=%.2fs, UA=%s)",
+        client.delay, client.cfg.global_config.user_agent[:60],
+    )
     items = []
     for instr in client.iter_all_directions(max_directions=max_directions):
         items.append(instr.to_dict())
+        # Промежуточное сохранение каждые 10 инструкций
+        if len(items) % 10 == 0:
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "source": "vetlek.ru",
+                        "source_url": client.base_url,
+                        "total_directions": len(items),
+                        "directions": items,
+                    },
+                    f,
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            log.info("Промежуточное сохранение: %d инструкций", len(items))
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(
             {
                 "source": "vetlek.ru",
-                "source_url": BASE_URL,
+                "source_url": client.base_url,
                 "total_directions": len(items),
                 "directions": items,
             },
@@ -441,16 +495,26 @@ if __name__ == "__main__":
     p.add_argument("--fetch", metavar="ID", help="Скачать одну инструкцию по ID")
     p.add_argument("--fetch-all", metavar="OUTPUT_JSON", help="Скачать все инструкции в JSON")
     p.add_argument("--max", type=int, default=None, help="Лимит инструкций")
+    p.add_argument("--delay", type=float, default=None,
+                   help="Переопределить delay (секунд между запросами)")
+    p.add_argument("--config", default=None, help="Путь к config.yaml")
     args = p.parse_args()
 
+    if args.config:
+        from pathlib import Path
+        from config import load_config
+        load_config(Path(args.config))
+
+    client_kwargs = {"delay": args.delay} if args.delay else {}
+
     if args.list:
-        c = VetlekClient()
+        c = VetlekClient(**client_kwargs)
         ids = c.list_direction_ids()
         print(f"Всего ID: {len(ids)}")
         for i in ids[:30]:
             print(f"  {i}")
     elif args.fetch:
-        c = VetlekClient()
+        c = VetlekClient(**client_kwargs)
         d = c.fetch_direction(args.fetch)
         if d:
             for k, v in d.to_dict().items():
