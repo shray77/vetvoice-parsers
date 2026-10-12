@@ -48,7 +48,7 @@ on:
       - '.github/workflows/validate.yml'
 
 permissions:
-  contents: read       # для клонирования vetvoice из GitLab
+  contents: write      # для клонирования vetvoice и коммита отчёта валидации
   actions: read        # для чтения artifacts
 
 # Не запускать параллельно несколько пайплайнов
@@ -236,6 +236,19 @@ jobs:
             output/review.md
           retention-days: 30
           compression-level: 6
+
+      # ---------- 10.5. Персистентный отчёт (коммит в репо вместо Telegram) ----------
+      - name: 💾 Persist validation report
+        if: always()
+        run: |
+          mkdir -p data/validation
+          for f in validation_report.json discrepancies.csv review.md; do
+            if [ -f "output/$f" ]; then cp "output/$f" "data/validation/$f"; fi
+          done
+          git config user.name "parsers-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/validation
+          git diff --cached --quiet || (git commit -m "validation report $(date -u +%F)" && git push)
 
       # ---------- 11. Уведомление в лог при ошибке ----------
       - name: ❌ Report failure
