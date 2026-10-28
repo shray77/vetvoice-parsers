@@ -2,29 +2,29 @@
   "total_drugs": 2401,
   "checked_drugs": 2401,
   "matched_drugs": 2376,
-  "discrepancies_count": 1434,
-  "fixed_drugs": 0,
+  "discrepancies_count": 1424,
+  "fixed_drugs": 5,
   "sources_used": [
     "vetprotocol (1657 записей)",
     "vetlek (398 записей)",
     "fsvps (2347 записей)"
   ],
   "discrepancies_by_severity": {
-    "info": 448,
-    "warning": 986,
+    "info": 522,
+    "warning": 902,
     "error": 0
   },
   "discrepancies_by_field": {
     "dose_per_kg": 609,
-    "animal_specific.Собаки.dose_per_kg": 472,
-    "animals.missing.Собаки": 63,
-    "animal_specific.Птица.dose_per_kg": 63,
-    "inn": 63,
+    "animal_specific.Собаки.dose_per_kg": 375,
+    "animals.missing.Собаки": 129,
+    "animals.missing.Свиньи": 69,
+    "inn": 64,
+    "animal_specific.Птица.dose_per_kg": 62,
     "animals.missing.Кролики": 54,
-    "animal_specific.Свиньи.dose_per_kg": 39,
-    "animals.missing.Свиньи": 30,
-    "animals.missing.Птица": 26,
-    "animal_specific.missing": 12,
+    "animals.missing.Птица": 27,
+    "animal_specific.missing": 20,
+    "animal_specific.Свиньи.dose_per_kg": 12,
     "animal_specific.Кролики.dose_per_kg": 3
   },
   "discrepancies": [
@@ -289,13 +289,17 @@
     {
       "drug_id": 31,
       "drug_name": "Сульф-комплекс АВЗ",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 34,
@@ -637,6 +641,20 @@
       "notes": "vetprotocol знает дозу для Птица (1.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
+      "drug_id": 84,
+      "drug_name": "Петмелокс VETЗАБОТА®",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки",
+        "Кошки"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
+      "suggested_fix": null,
+      "notes": "vetprotocol знает дозу для Свиньи (0.4 мг/кг), но в vetvoice.animals этого вида нет."
+    },
+    {
       "drug_id": 85,
       "drug_name": "Грануламокс",
       "field": "dose_per_kg",
@@ -646,17 +664,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 85,
-      "drug_name": "Грануламокс",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 89,
@@ -880,13 +887,16 @@
     {
       "drug_id": 126,
       "drug_name": "Тилозин ВЛ 25",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 130,
@@ -1001,13 +1011,15 @@
     {
       "drug_id": 142,
       "drug_name": "Левоксидин",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 0.5,
-      "source_value": 25.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Лошади"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=0.5, vetprotocol=25.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (25.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 144,
@@ -1459,13 +1471,15 @@
     {
       "drug_id": 191,
       "drug_name": "Фармазин® 800",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 201,
@@ -1477,17 +1491,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 201,
-      "drug_name": "Димоксан WS",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 201,
@@ -1715,13 +1718,16 @@
     {
       "drug_id": 254,
       "drug_name": "Интерспектин WS",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 22.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=22.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (22.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 255,
@@ -1755,17 +1761,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 256,
-      "drug_name": "Каримокс",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 258,
@@ -1905,6 +1900,19 @@
       "severity": "info",
       "suggested_fix": null,
       "notes": "vetprotocol знает дозу для Птица (1.0 мг/кг), но в vetvoice.animals этого вида нет."
+    },
+    {
+      "drug_id": 271,
+      "drug_name": "Мелоксикам Апиценна",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
+      "suggested_fix": null,
+      "notes": "vetprotocol знает дозу для Свиньи (0.4 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 273,
@@ -2085,13 +2093,16 @@
     {
       "drug_id": 293,
       "drug_name": "Витроцил",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 293,
@@ -2415,17 +2426,6 @@
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 322,
-      "drug_name": "АМОКСИСТИМ порошок",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 325,
       "drug_name": "Гапентин",
       "field": "dose_per_kg",
@@ -2497,13 +2497,15 @@
     {
       "drug_id": 334,
       "drug_name": "Колмик 20%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 334,
@@ -2519,13 +2521,15 @@
     {
       "drug_id": 334,
       "drug_name": "Колмик 20%",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 335,
@@ -2563,13 +2567,15 @@
     {
       "drug_id": 337,
       "drug_name": "ЭНРОПРИМ®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 337,
@@ -2585,13 +2591,15 @@
     {
       "drug_id": 337,
       "drug_name": "ЭНРОПРИМ®",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 341,
@@ -3146,13 +3154,15 @@
     {
       "drug_id": 417,
       "drug_name": "Спелинк® 660",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 22.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=22.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (22.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 419,
@@ -3325,13 +3335,16 @@
     {
       "drug_id": 434,
       "drug_name": "Коликвинол® С",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 22.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=22.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (22.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 436,
@@ -3391,13 +3404,17 @@
     {
       "drug_id": 438,
       "drug_name": "Флоксаген S",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 14.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=14.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (14.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 441,
@@ -3455,17 +3472,6 @@
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 447,
-      "drug_name": "Амоксигор 80%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 448,
       "drug_name": "Мелоксигард",
       "field": "dose_per_kg",
@@ -3514,6 +3520,20 @@
       "severity": "info",
       "suggested_fix": null,
       "notes": "vetprotocol знает дозу для Птица (1.0 мг/кг), но в vetvoice.animals этого вида нет."
+    },
+    {
+      "drug_id": 448,
+      "drug_name": "Мелоксигард",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки",
+        "Кошки"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
+      "suggested_fix": null,
+      "notes": "vetprotocol знает дозу для Свиньи (0.4 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 453,
@@ -3676,13 +3696,18 @@
     {
       "drug_id": 467,
       "drug_name": "Энрофлон® 10% порошок",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 467,
@@ -3764,13 +3789,16 @@
     {
       "drug_id": 481,
       "drug_name": "Солютистин®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 482,
@@ -3963,6 +3991,20 @@
       "notes": "vetprotocol знает дозу для Птица (1.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
+      "drug_id": 499,
+      "drug_name": "Вемелкам® ТАБ",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки",
+        "Кошки"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
+      "suggested_fix": null,
+      "notes": "vetprotocol знает дозу для Свиньи (0.4 мг/кг), но в vetvoice.animals этого вида нет."
+    },
+    {
       "drug_id": 502,
       "drug_name": "Фалена",
       "field": "dose_per_kg",
@@ -4040,17 +4082,6 @@
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 507,
-      "drug_name": "Амоксигор 70%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 509,
       "drug_name": "Эктогардика",
       "field": "dose_per_kg",
@@ -4086,13 +4117,16 @@
     {
       "drug_id": 511,
       "drug_name": "Фармазин® 25%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 514,
@@ -4209,13 +4243,15 @@
     {
       "drug_id": 533,
       "drug_name": "Энромаг-О®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 533,
@@ -4231,13 +4267,15 @@
     {
       "drug_id": 533,
       "drug_name": "Энромаг-О®",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 535,
@@ -4249,17 +4287,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 535,
-      "drug_name": "Биоциллин-200 WS",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 540,
@@ -4396,13 +4423,15 @@
     {
       "drug_id": 559,
       "drug_name": "Эндометрамаг-Т®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 3.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=3.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (3.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 568,
@@ -4482,6 +4511,24 @@
       "severity": "info",
       "suggested_fix": null,
       "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
+    },
+    {
+      "drug_id": 579,
+      "drug_name": "Новокаин 0,5% и 2% раствор для инъекций",
+      "field": "animal_specific.missing",
+      "vetvoice_value": {
+        "animals": [
+          "КРС",
+          "Свиньи"
+        ],
+        "dose_per_kg": 5.0,
+        "animal_specific_keys": []
+      },
+      "source_value": null,
+      "source": "self",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Препарат указан для 2 видов (КРС, Свиньи), но animal_specific неполный. Дозировка для разных видов часто различается — нужно заполнить animal_specific для каждого вида."
     },
     {
       "drug_id": 582,
@@ -4631,13 +4678,17 @@
     {
       "drug_id": 598,
       "drug_name": "Бактимаг®-О",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 598,
@@ -4654,12 +4705,12 @@
       "drug_id": 599,
       "drug_name": "Бромколин®-О",
       "field": "dose_per_kg",
-      "vetvoice_value": 10,
+      "vetvoice_value": 0,
       "source_value": 1.0,
       "source": "vetprotocol",
       "severity": "warning",
-      "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=1.0 для Собаки — требуется ручная проверка"
+      "suggested_fix": 1.0,
+      "notes": "vetprotocol указывает дозу 1.0 мг/кг для Собаки"
     },
     {
       "drug_id": 599,
@@ -4700,13 +4751,17 @@
     {
       "drug_id": 609,
       "drug_name": "Энрофлок-Э",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 14.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=14.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (14.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 611,
@@ -4932,13 +4987,15 @@
     {
       "drug_id": 643,
       "drug_name": "Энроксил® 10% раствор для перорального применения",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 643,
@@ -4954,13 +5011,15 @@
     {
       "drug_id": 643,
       "drug_name": "Энроксил® 10% раствор для перорального применения",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 651,
@@ -5001,13 +5060,17 @@
     {
       "drug_id": 653,
       "drug_name": "Линко-Фуд 15%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 22.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=22.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (22.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 656,
@@ -5118,17 +5181,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 672,
-      "drug_name": "АМОКСИСТИМ К",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 681,
@@ -5354,13 +5406,16 @@
     {
       "drug_id": 731,
       "drug_name": "ЭНРОСТИМ 10% К",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 731,
@@ -5396,17 +5451,6 @@
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 756,
-      "drug_name": "Амоксициллин Feed",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 759,
       "drug_name": "Энрофлокс 10%",
       "field": "dose_per_kg",
@@ -5420,13 +5464,15 @@
     {
       "drug_id": 759,
       "drug_name": "Энрофлокс 10%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 759,
@@ -5442,13 +5488,15 @@
     {
       "drug_id": 759,
       "drug_name": "Энрофлокс 10%",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 761,
@@ -5610,17 +5658,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 784,
-      "drug_name": "Амоксиянтарь гранулы",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 790,
@@ -5790,13 +5827,15 @@
     {
       "drug_id": 796,
       "drug_name": "РольфКлуб 3D ушные капли",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 797,
@@ -6007,17 +6046,6 @@
     {
       "drug_id": 821,
       "drug_name": "Амоксиянтарь",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
-      "drug_id": 821,
-      "drug_name": "Амоксиянтарь",
       "field": "animal_specific.Птица.dose_per_kg",
       "vetvoice_value": 17.5,
       "source_value": 175.0,
@@ -6093,6 +6121,19 @@
       "notes": "Расхождение для Собаки: vetvoice=3, vetprotocol=14.0 — требуется ручная проверка"
     },
     {
+      "drug_id": 827,
+      "drug_name": "ИРИС капли глазные",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
+      "suggested_fix": null,
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
+    },
+    {
       "drug_id": 841,
       "drug_name": "Альбендазол 10%",
       "field": "dose_per_kg",
@@ -6155,13 +6196,18 @@
     {
       "drug_id": 844,
       "drug_name": "Энрофлоксацин 100 раствор для перорального применения",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 844,
@@ -6241,13 +6287,16 @@
     {
       "drug_id": 855,
       "drug_name": "Энрофлоксацин 100 порошок",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 855,
@@ -6331,13 +6380,15 @@
     {
       "drug_id": 862,
       "drug_name": "Линкопрем 150",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 22.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=22.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (22.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 864,
@@ -6373,17 +6424,6 @@
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 869,
-      "drug_name": "Ремокс микрогранулят",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 870,
       "drug_name": "Ремокс 500",
       "field": "dose_per_kg",
@@ -6393,17 +6433,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 870,
-      "drug_name": "Ремокс 500",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 872,
@@ -6431,12 +6460,12 @@
       "drug_id": 873,
       "drug_name": "Зелерис",
       "field": "dose_per_kg",
-      "vetvoice_value": 20.0,
+      "vetvoice_value": 40,
       "source_value": 0.2,
       "source": "vetprotocol",
       "severity": "warning",
       "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=20.0, vetprotocol=0.2 для Собаки — требуется ручная проверка"
+      "notes": "Расхождение в дозе: vetvoice=40, vetprotocol=0.2 для Собаки — требуется ручная проверка"
     },
     {
       "drug_id": 873,
@@ -6467,24 +6496,28 @@
     {
       "drug_id": 873,
       "drug_name": "Зелерис",
-      "field": "animal_specific.Птица.dose_per_kg",
-      "vetvoice_value": 20,
-      "source_value": 1.0,
+      "field": "animals.missing.Птица",
+      "vetvoice_value": [
+        "КРС"
+      ],
+      "source_value": "Птица",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Птица: vetvoice=20, vetprotocol=1.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Птица (1.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 873,
       "drug_name": "Зелерис",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 0.4,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "КРС"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=15, vetprotocol=0.4 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (0.4 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 874,
@@ -6836,13 +6869,15 @@
     {
       "drug_id": 939,
       "drug_name": "Мастигард®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 0.5,
-      "source_value": 25.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=0.5, vetprotocol=25.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (25.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 948,
@@ -6944,17 +6979,6 @@
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 962,
-      "drug_name": "Амоксипрем 200",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 963,
       "drug_name": "Кетопроф",
       "field": "dose_per_kg",
@@ -6975,6 +6999,24 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение для Собаки: vetvoice=1, vetprotocol=2.0 — требуется ручная проверка"
+    },
+    {
+      "drug_id": 966,
+      "drug_name": "Новокаин 0,5%, 2% раствор для инъекций",
+      "field": "animal_specific.missing",
+      "vetvoice_value": {
+        "animals": [
+          "КРС",
+          "Свиньи"
+        ],
+        "dose_per_kg": 5.0,
+        "animal_specific_keys": []
+      },
+      "source_value": null,
+      "source": "self",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Препарат указан для 2 видов (КРС, Свиньи), но animal_specific неполный. Дозировка для разных видов часто различается — нужно заполнить animal_specific для каждого вида."
     },
     {
       "drug_id": 974,
@@ -7054,17 +7096,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 990,
-      "drug_name": "Амокси 50 S.P.V.",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 994,
@@ -7183,13 +7214,16 @@
     {
       "drug_id": 1005,
       "drug_name": "ГЕНТАФЛОКС ® оральный",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 14.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=14.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (14.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1007,
@@ -7238,13 +7272,16 @@
     {
       "drug_id": 1016,
       "drug_name": "Энроколистин ВС",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1016,
@@ -7271,13 +7308,16 @@
     {
       "drug_id": 1020,
       "drug_name": "Тилмагнум",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1021,
@@ -7304,13 +7344,15 @@
     {
       "drug_id": 1023,
       "drug_name": "Триэн",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1023,
@@ -7326,13 +7368,15 @@
     {
       "drug_id": 1023,
       "drug_name": "Триэн",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1026,
@@ -7479,12 +7523,12 @@
       "drug_id": 1057,
       "drug_name": "Ганаминовит",
       "field": "dose_per_kg",
-      "vetvoice_value": 0.5,
+      "vetvoice_value": 0,
       "source_value": 1000.0,
       "source": "vetprotocol",
       "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=0.5, vetprotocol=1000.0 для Собаки — требуется ручная проверка"
+      "notes": "vetprotocol указывает дозу 1000.0 мг для Собаки (нереалистичная, не применяем)"
     },
     {
       "drug_id": 1066,
@@ -7698,13 +7742,16 @@
     {
       "drug_id": 1100,
       "drug_name": "ЭНРОСОЛ® 10% раствор для орального применения",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1100,
@@ -7720,13 +7767,16 @@
     {
       "drug_id": 1100,
       "drug_name": "ЭНРОСОЛ® 10% раствор для орального применения",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1112,
@@ -7933,17 +7983,6 @@
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 1134,
-      "drug_name": "Аквамоксицил",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 1135,
       "drug_name": "Лексофлон® OR",
       "field": "dose_per_kg",
@@ -8085,12 +8124,12 @@
       "drug_id": 1158,
       "drug_name": "Домоседан®",
       "field": "dose_per_kg",
-      "vetvoice_value": 1.0,
+      "vetvoice_value": 0.02,
       "source_value": 20.0,
       "source": "vetprotocol",
       "severity": "warning",
       "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=1.0, vetprotocol=20.0 для Собаки — требуется ручная проверка"
+      "notes": "Расхождение в дозе: vetvoice=0.02, vetprotocol=20.0 для Собаки — требуется ручная проверка"
     },
     {
       "drug_id": 1158,
@@ -8226,13 +8265,16 @@
     {
       "drug_id": 1182,
       "drug_name": "Гентамицин 100 порошок",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 4,
-      "source_value": 14.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=4, vetprotocol=14.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (14.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1182,
@@ -8536,13 +8578,16 @@
     {
       "drug_id": 1223,
       "drug_name": "Энрофлон®-К",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1223,
@@ -8558,13 +8603,16 @@
     {
       "drug_id": 1223,
       "drug_name": "Энрофлон®-К",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1235,
@@ -8576,17 +8624,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=12.5, vetprotocol=7.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 1235,
-      "drug_name": "Амоксипол 10%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 1237,
@@ -8629,13 +8666,15 @@
     {
       "drug_id": 1239,
       "drug_name": "Метровит",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1244,
@@ -8711,13 +8750,15 @@
     {
       "drug_id": 1247,
       "drug_name": "Энроколи 10%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1247,
@@ -8733,13 +8774,15 @@
     {
       "drug_id": 1247,
       "drug_name": "Энроколи 10%",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1260,
@@ -8894,17 +8937,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 1288,
-      "drug_name": "Амокси ВЛ 80",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 1291,
@@ -9148,6 +9180,19 @@
       "notes": "Расхождение для Собаки: vetvoice=3, vetprotocol=14.0 — требуется ручная проверка"
     },
     {
+      "drug_id": 1314,
+      "drug_name": "Декта®-2",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
+      "suggested_fix": null,
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
+    },
+    {
       "drug_id": 1318,
       "drug_name": "Энрофлокс 10% инъекционный",
       "field": "dose_per_kg",
@@ -9260,13 +9305,15 @@
     {
       "drug_id": 1341,
       "drug_name": "Кинокол®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1341,
@@ -9282,13 +9329,15 @@
     {
       "drug_id": 1341,
       "drug_name": "Кинокол®",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1342,
@@ -9304,13 +9353,16 @@
     {
       "drug_id": 1342,
       "drug_name": "Неоэнрон",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1342,
@@ -9348,46 +9400,72 @@
     {
       "drug_id": 1344,
       "drug_name": "Гентахинол",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 14.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=14.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (14.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1344,
       "drug_name": "Гентахинол",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1345,
       "drug_name": "Дезацид",
       "field": "dose_per_kg",
-      "vetvoice_value": 3,
+      "vetvoice_value": 0,
       "source_value": 14.0,
       "source": "vetprotocol",
       "severity": "warning",
-      "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=3, vetprotocol=14.0 для Собаки — требуется ручная проверка"
+      "suggested_fix": 14.0,
+      "notes": "vetprotocol указывает дозу 14.0 мг/кг для Собаки"
     },
     {
       "drug_id": 1345,
       "drug_name": "Дезацид",
       "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 3,
+      "vetvoice_value": 0,
       "source_value": 14.0,
       "source": "vetprotocol",
       "severity": "warning",
+      "suggested_fix": {
+        "dose_per_kg": 14.0,
+        "dose_unit": "мг/кг",
+        "frequency": "",
+        "method": "внутримышечно",
+        "course_days": ""
+      },
+      "notes": "vetprotocol знает дозу для Собаки: 14.0 мг/кг, а в vetvoice animal_specific.Собаки.dose_per_kg пусто."
+    },
+    {
+      "drug_id": 1345,
+      "drug_name": "Дезацид",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "КРС",
+        "Лошади",
+        "Собаки",
+        "Кошки"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=3, vetprotocol=14.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1349,
@@ -9701,17 +9779,6 @@
       "notes": "Расхождение в дозе: vetvoice=15.0, vetprotocol=35.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 1378,
-      "drug_name": "Амоксигард® WS",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 100.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=100.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 1379,
       "drug_name": "Неофлокс таблетки",
       "field": "dose_per_kg",
@@ -9747,13 +9814,15 @@
     {
       "drug_id": 1379,
       "drug_name": "Неофлокс таблетки",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1380,
@@ -9846,13 +9915,15 @@
     {
       "drug_id": 1390,
       "drug_name": "Офлосан®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 25.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=25.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (25.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1395,
@@ -9886,17 +9957,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=15, vetprotocol=7.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 1396,
-      "drug_name": "Аматиб 80% водорастворимый порошок",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 1398,
@@ -10030,13 +10090,15 @@
     {
       "drug_id": 1405,
       "drug_name": "Энрофлоксацин 10%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5.0,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5.0, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1405,
@@ -10052,13 +10114,15 @@
     {
       "drug_id": 1405,
       "drug_name": "Энрофлоксацин 10%",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1410,
@@ -10114,12 +10178,44 @@
       "drug_id": 1413,
       "drug_name": "Отидез®",
       "field": "dose_per_kg",
-      "vetvoice_value": 4,
+      "vetvoice_value": 0,
       "source_value": 14.0,
       "source": "vetprotocol",
       "severity": "warning",
+      "suggested_fix": 14.0,
+      "notes": "vetprotocol указывает дозу 14.0 мг/кг для Собаки"
+    },
+    {
+      "drug_id": 1413,
+      "drug_name": "Отидез®",
+      "field": "animal_specific.Собаки.dose_per_kg",
+      "vetvoice_value": 0,
+      "source_value": 14.0,
+      "source": "vetprotocol",
+      "severity": "warning",
+      "suggested_fix": {
+        "dose_per_kg": 14.0,
+        "dose_unit": "мг/кг",
+        "frequency": "",
+        "method": "внутримышечно",
+        "course_days": ""
+      },
+      "notes": "vetprotocol знает дозу для Собаки: 14.0 мг/кг, а в vetvoice animal_specific.Собаки.dose_per_kg пусто."
+    },
+    {
+      "drug_id": 1413,
+      "drug_name": "Отидез®",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки",
+        "Пушные звери",
+        "Кролики"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=4, vetprotocol=14.0 для Собаки — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1418,
@@ -10135,13 +10231,16 @@
     {
       "drug_id": 1418,
       "drug_name": "Энроколитрим",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1418,
@@ -10318,6 +10417,23 @@
       "notes": "Расхождение в дозе: vetvoice=0.1, vetprotocol=3.0 для Собаки — требуется ручная проверка"
     },
     {
+      "drug_id": 1435,
+      "drug_name": "Отоферонол Премиум",
+      "field": "animal_specific.Собаки.dose_per_kg",
+      "vetvoice_value": 0.0,
+      "source_value": 3.0,
+      "source": "vetprotocol",
+      "severity": "warning",
+      "suggested_fix": {
+        "dose_per_kg": 3.0,
+        "dose_unit": "мг/кг",
+        "frequency": "",
+        "method": "внутривенно",
+        "course_days": ""
+      },
+      "notes": "vetprotocol знает дозу для Собаки: 3.0 мг/кг, а в vetvoice animal_specific.Собаки.dose_per_kg пусто."
+    },
+    {
       "drug_id": 1437,
       "drug_name": "КОЛИФЛОКС® инъекционный",
       "field": "dose_per_kg",
@@ -10405,22 +10521,33 @@
       "drug_name": "Гентам®",
       "field": "dose_per_kg",
       "vetvoice_value": 15,
-      "source_value": 7.0,
+      "source_value": 8.0,
       "source": "vetprotocol",
       "severity": "warning",
       "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=15, vetprotocol=7.0 для Собаки — требуется ручная проверка"
+      "notes": "Расхождение в дозе: vetvoice=15, vetprotocol=8.0 для Собаки — требуется ручная проверка"
     },
     {
       "drug_id": 1444,
       "drug_name": "Гентам®",
       "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
+      "vetvoice_value": 2.4,
+      "source_value": 14.0,
       "source": "vetprotocol",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Расхождение для Собаки: vetvoice=2.4, vetprotocol=14.0 — требуется ручная проверка"
+    },
+    {
+      "drug_id": 1444,
+      "drug_name": "Гентам®",
+      "field": "inn",
+      "vetvoice_value": "гентамицин",
+      "source_value": "амоксициллин, гентамицин",
+      "source": "fsvps",
       "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
+      "notes": "МНН различается: vetvoice='гентамицин', fsvps='амоксициллин, гентамицин' — возможна ошибка"
     },
     {
       "drug_id": 1446,
@@ -10491,13 +10618,15 @@
     {
       "drug_id": 1449,
       "drug_name": "Энростин®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1449,
@@ -10513,13 +10642,15 @@
     {
       "drug_id": 1449,
       "drug_name": "Энростин®",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1451,
@@ -10978,13 +11109,15 @@
     {
       "drug_id": 1498,
       "drug_name": "Оксибактоцид® пластины",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Пчёлы"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=15, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1500,
@@ -11000,13 +11133,15 @@
     {
       "drug_id": 1500,
       "drug_name": "Оксибактоцид® порошок",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Пчёлы"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=15, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1506,
@@ -11080,13 +11215,18 @@
     {
       "drug_id": 1509,
       "drug_name": "Жотрил 10%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1509,
@@ -11179,13 +11319,18 @@
     {
       "drug_id": 1516,
       "drug_name": "ЭНРОСТИМ 10%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1516,
@@ -11436,13 +11581,15 @@
     {
       "drug_id": 1563,
       "drug_name": "Аквахинол",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1563,
@@ -11458,13 +11605,15 @@
     {
       "drug_id": 1563,
       "drug_name": "Аквахинол",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1565,
@@ -11529,6 +11678,24 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение для Собаки: vetvoice=2, vetprotocol=3.0 — требуется ручная проверка"
+    },
+    {
+      "drug_id": 1578,
+      "drug_name": "Новокаин 0,5%, 1%, 2% раствор для инъекций",
+      "field": "animal_specific.missing",
+      "vetvoice_value": {
+        "animals": [
+          "КРС",
+          "Свиньи"
+        ],
+        "dose_per_kg": 5.0,
+        "animal_specific_keys": []
+      },
+      "source_value": null,
+      "source": "self",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Препарат указан для 2 видов (КРС, Свиньи), но animal_specific неполный. Дозировка для разных видов часто различается — нужно заполнить animal_specific для каждого вида."
     },
     {
       "drug_id": 1585,
@@ -11731,13 +11898,15 @@
     {
       "drug_id": 1621,
       "drug_name": "Энрофлон® таблетки пенообразующие",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1621,
@@ -11753,13 +11922,15 @@
     {
       "drug_id": 1621,
       "drug_name": "Энрофлон® таблетки пенообразующие",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "КРС"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1627,
@@ -11909,13 +12080,17 @@
     {
       "drug_id": 1650,
       "drug_name": "Тиланик водорастворимый порошок",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС",
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1655,
@@ -11927,17 +12102,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=15, vetprotocol=7.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 1655,
-      "drug_name": "Квестигин",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 1658,
@@ -11953,13 +12117,16 @@
     {
       "drug_id": 1658,
       "drug_name": "Спелинк®-44",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 22.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=22.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (22.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1659,
@@ -11971,17 +12138,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 1659,
-      "drug_name": "Соламокс®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 1660,
@@ -12055,6 +12211,19 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение для Собаки: vetvoice=3, vetprotocol=14.0 — требуется ручная проверка"
+    },
+    {
+      "drug_id": 1664,
+      "drug_name": "Отибиовин",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
+      "suggested_fix": null,
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1670,
@@ -12309,6 +12478,46 @@
       "notes": "Расхождение в дозе: vetvoice=4, vetprotocol=2.0 для Собаки — требуется ручная проверка"
     },
     {
+      "drug_id": 1712,
+      "drug_name": "Креолин-Х®",
+      "field": "animal_specific.missing",
+      "vetvoice_value": {
+        "animals": [
+          "Собаки",
+          "КРС"
+        ],
+        "dose_per_kg": 10,
+        "animal_specific_keys": [
+          "Собаки"
+        ]
+      },
+      "source_value": null,
+      "source": "self",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Препарат указан для 2 видов (Собаки, КРС), но animal_specific неполный. Дозировка для разных видов часто различается — нужно заполнить animal_specific для каждого вида."
+    },
+    {
+      "drug_id": 1713,
+      "drug_name": "Биорекс-ГХ®",
+      "field": "animal_specific.missing",
+      "vetvoice_value": {
+        "animals": [
+          "Собаки",
+          "КРС"
+        ],
+        "dose_per_kg": 10,
+        "animal_specific_keys": [
+          "Собаки"
+        ]
+      },
+      "source_value": null,
+      "source": "self",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Препарат указан для 2 видов (Собаки, КРС), но animal_specific неполный. Дозировка для разных видов часто различается — нужно заполнить animal_specific для каждого вида."
+    },
+    {
       "drug_id": 1715,
       "drug_name": "Бутокс 7.5",
       "field": "animals.missing.Собаки",
@@ -12533,13 +12742,15 @@
     {
       "drug_id": 1748,
       "drug_name": "Колихинол",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1748,
@@ -12555,13 +12766,15 @@
     {
       "drug_id": 1748,
       "drug_name": "Колихинол",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1749,
@@ -12732,17 +12945,6 @@
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 1778,
-      "drug_name": "Ветримоксин 50%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 1790,
       "drug_name": "Капли глазные АЛЕЗАН®",
       "field": "dose_per_kg",
@@ -12855,17 +13057,6 @@
       "notes": "Расхождение в дозе: vetvoice=0.1, vetprotocol=12.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 1815,
-      "drug_name": "Супрелорин® 4,7 мг",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 0.1,
-      "source_value": 12.0,
-      "source": "vetprotocol",
-      "severity": "warning",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=0.1, vetprotocol=12.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 1816,
       "drug_name": "Азинокс® ветеринарный",
       "field": "dose_per_kg",
@@ -12936,6 +13127,19 @@
       "notes": "vetprotocol знает дозу для Птица (1.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
+      "drug_id": 1824,
+      "drug_name": "Петкам",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
+      "suggested_fix": null,
+      "notes": "vetprotocol знает дозу для Свиньи (0.4 мг/кг), но в vetvoice.animals этого вида нет."
+    },
+    {
       "drug_id": 1828,
       "drug_name": "Тилозин АВЗ®",
       "field": "dose_per_kg",
@@ -12949,13 +13153,16 @@
     {
       "drug_id": 1828,
       "drug_name": "Тилозин АВЗ®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1829,
@@ -13111,17 +13318,6 @@
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 1848,
-      "drug_name": "Бетамицин",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 1851,
       "drug_name": "Маймокси 800 WSP",
       "field": "dose_per_kg",
@@ -13131,17 +13327,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 1851,
-      "drug_name": "Маймокси 800 WSP",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 1852,
@@ -13208,6 +13393,26 @@
       "severity": "info",
       "suggested_fix": null,
       "notes": "МНН различается: vetvoice='Разбавитель для вирусвакцин против болезни Марека', fsvps='Вирусвакцина против болезни Марека жидкая культура' — возможна ошибка"
+    },
+    {
+      "drug_id": 1870,
+      "drug_name": "Шампунь инсектицидный для кошек Мисс Кисс",
+      "field": "animal_specific.missing",
+      "vetvoice_value": {
+        "animals": [
+          "Собаки",
+          "КРС"
+        ],
+        "dose_per_kg": 10,
+        "animal_specific_keys": [
+          "Собаки"
+        ]
+      },
+      "source_value": null,
+      "source": "self",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Препарат указан для 2 видов (Собаки, КРС), но animal_specific неполный. Дозировка для разных видов часто различается — нужно заполнить animal_specific для каждого вида."
     },
     {
       "drug_id": 1872,
@@ -13356,13 +13561,17 @@
     {
       "drug_id": 1896,
       "drug_name": "Фармазин® 500 водорастворимый порошок",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС",
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1898,
@@ -13374,17 +13583,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 1898,
-      "drug_name": "Гинековир",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 1898,
@@ -13596,17 +13794,6 @@
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 1965,
-      "drug_name": "Амоксикел 70",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 1966,
       "drug_name": "Прокпен 30",
       "field": "inn",
@@ -13642,13 +13829,15 @@
     {
       "drug_id": 1968,
       "drug_name": "Энрофлокс 10%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1968,
@@ -13664,13 +13853,15 @@
     {
       "drug_id": 1968,
       "drug_name": "Энрофлокс 10%",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1971,
@@ -13744,13 +13935,17 @@
     {
       "drug_id": 1983,
       "drug_name": "Тилоколин оральный",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС",
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1986,
@@ -13799,13 +13994,16 @@
     {
       "drug_id": 1989,
       "drug_name": "Энроцид",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС",
+        "Свиньи"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1989,
@@ -14049,13 +14247,28 @@
     {
       "drug_id": 2018,
       "drug_name": "Мастомицин®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 4,
-      "source_value": 14.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=4, vetprotocol=14.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (14.0 мг/кг), но в vetvoice.animals этого вида нет."
+    },
+    {
+      "drug_id": 2018,
+      "drug_name": "Мастомицин®",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "КРС"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
+      "suggested_fix": null,
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2020,
@@ -14078,6 +14291,26 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение для Собаки: vetvoice=0.1, vetprotocol=3.0 — требуется ручная проверка"
+    },
+    {
+      "drug_id": 2024,
+      "drug_name": "Энтомозан®-С",
+      "field": "animal_specific.missing",
+      "vetvoice_value": {
+        "animals": [
+          "Собаки",
+          "КРС"
+        ],
+        "dose_per_kg": 10,
+        "animal_specific_keys": [
+          "Собаки"
+        ]
+      },
+      "source_value": null,
+      "source": "self",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Препарат указан для 2 видов (Собаки, КРС), но animal_specific неполный. Дозировка для разных видов часто различается — нужно заполнить animal_specific для каждого вида."
     },
     {
       "drug_id": 2031,
@@ -14248,13 +14481,15 @@
     {
       "drug_id": 2045,
       "drug_name": "Тилогор 50",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2048,
@@ -14336,13 +14571,16 @@
     {
       "drug_id": 2065,
       "drug_name": "Фармазин® 1000",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2068,
@@ -14581,13 +14819,17 @@
     {
       "drug_id": 2095,
       "drug_name": "Энронит ®OR",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2095,
@@ -14912,13 +15154,15 @@
     {
       "drug_id": 2139,
       "drug_name": "Карифлокс",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2139,
@@ -14934,13 +15178,15 @@
     {
       "drug_id": 2139,
       "drug_name": "Карифлокс",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2142,
@@ -15012,12 +15258,12 @@
       "drug_id": 2147,
       "drug_name": "Ультравит",
       "field": "dose_per_kg",
-      "vetvoice_value": 7.0,
+      "vetvoice_value": 0,
       "source_value": 500.0,
       "source": "vetprotocol",
       "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=7.0, vetprotocol=500.0 для Собаки — требуется ручная проверка"
+      "notes": "vetprotocol указывает дозу 500.0 мг для Собаки (нереалистичная, не применяем)"
     },
     {
       "drug_id": 2153,
@@ -15066,6 +15312,19 @@
       "notes": "Расхождение для Собаки: vetvoice=3, vetprotocol=14.0 — требуется ручная проверка"
     },
     {
+      "drug_id": 2159,
+      "drug_name": "Отибиовет",
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Собаки"
+      ],
+      "source_value": "Свиньи",
+      "source": "vetprotocol",
+      "severity": "info",
+      "suggested_fix": null,
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
+    },
+    {
       "drug_id": 2171,
       "drug_name": "Деполак",
       "field": "dose_per_kg",
@@ -15097,17 +15356,6 @@
       "severity": "info",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=0.1, vetprotocol=500.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 2180,
-      "drug_name": "Эльвита-Удивит",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 0.1,
-      "source_value": 500.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=0.1, vetprotocol=500.0 — требуется ручная проверка"
     },
     {
       "drug_id": 2189,
@@ -15156,13 +15404,15 @@
     {
       "drug_id": 2192,
       "drug_name": "Тилозинокар",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "КРС"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2194,
@@ -15174,17 +15424,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 2194,
-      "drug_name": "Сивамокс",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 2203,
@@ -15458,17 +15697,6 @@
       "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
-      "drug_id": 2235,
-      "drug_name": "Амоксициллин 10%",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
-    },
-    {
       "drug_id": 2237,
       "drug_name": "Серения таблетки",
       "field": "dose_per_kg",
@@ -15595,13 +15823,16 @@
     {
       "drug_id": 2245,
       "drug_name": "Линкоспектин 100 водорастворимый порошок",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 22.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Свиньи",
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=22.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (22.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2249,
@@ -15613,17 +15844,6 @@
       "severity": "warning",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=0.075, vetprotocol=10.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 2249,
-      "drug_name": "Дюфалайт",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 0.1,
-      "source_value": 100.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=0.1, vetprotocol=100.0 — требуется ручная проверка"
     },
     {
       "drug_id": 2251,
@@ -15755,13 +15975,15 @@
     {
       "drug_id": 2274,
       "drug_name": "Макролан WS",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 10,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=10, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2275,
@@ -15788,13 +16010,15 @@
     {
       "drug_id": 2279,
       "drug_name": "Роксацин",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2279,
@@ -15810,13 +16034,15 @@
     {
       "drug_id": 2279,
       "drug_name": "Роксацин",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2282,
@@ -15933,24 +16159,30 @@
     {
       "drug_id": 2292,
       "drug_name": "Квинокол Гидро",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 14.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=14.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (14.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2292,
       "drug_name": "Квинокол Гидро",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2293,
@@ -16024,13 +16256,16 @@
     {
       "drug_id": 2296,
       "drug_name": "Колмик-Е",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2296,
@@ -16046,13 +16281,16 @@
     {
       "drug_id": 2296,
       "drug_name": "Колмик-Е",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица",
+        "Кошки"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2301,
@@ -16152,13 +16390,15 @@
     {
       "drug_id": 2317,
       "drug_name": "Кенфлокс 10% ораль",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 20.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=20.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (20.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2317,
@@ -16174,24 +16414,26 @@
     {
       "drug_id": 2317,
       "drug_name": "Кенфлокс 10% ораль",
-      "field": "animal_specific.Свиньи.dose_per_kg",
-      "vetvoice_value": 2.5,
-      "source_value": 5.0,
+      "field": "animals.missing.Свиньи",
+      "vetvoice_value": [
+        "Птица"
+      ],
+      "source_value": "Свиньи",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Свиньи: vetvoice=2.5, vetprotocol=5.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Свиньи (5.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 2319,
       "drug_name": "Ганасупервит",
       "field": "dose_per_kg",
-      "vetvoice_value": 7.0,
+      "vetvoice_value": 0,
       "source_value": 3.0,
       "source": "vetprotocol",
       "severity": "warning",
-      "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=7.0, vetprotocol=3.0 для Собаки — требуется ручная проверка"
+      "suggested_fix": 3.0,
+      "notes": "vetprotocol указывает дозу 3.0 мг/кг для Собаки"
     },
     {
       "drug_id": 2319,
@@ -16255,6 +16497,24 @@
       "notes": "МНН различается: vetvoice='тиамулина фумарат, колистина метансульфонат', fsvps='тиамулин' — возможна ошибка"
     },
     {
+      "drug_id": 2335,
+      "drug_name": "Новокаин 0,5%, 1%, 2% раствор для инъекций",
+      "field": "animal_specific.missing",
+      "vetvoice_value": {
+        "animals": [
+          "КРС",
+          "Свиньи"
+        ],
+        "dose_per_kg": 5.0,
+        "animal_specific_keys": []
+      },
+      "source_value": null,
+      "source": "self",
+      "severity": "warning",
+      "suggested_fix": null,
+      "notes": "Препарат указан для 2 видов (КРС, Свиньи), но animal_specific неполный. Дозировка для разных видов часто различается — нужно заполнить animal_specific для каждого вида."
+    },
+    {
       "drug_id": 2339,
       "drug_name": "Ксила",
       "field": "dose_per_kg",
@@ -16308,17 +16568,6 @@
       "severity": "info",
       "suggested_fix": null,
       "notes": "Расхождение в дозе: vetvoice=0.075, vetprotocol=250.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 2349,
-      "drug_name": "Гепатовекс К",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 0.1,
-      "source_value": 250.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=0.1, vetprotocol=250.0 — требуется ручная проверка"
     },
     {
       "drug_id": 2366,
