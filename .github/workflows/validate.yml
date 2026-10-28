@@ -80,19 +80,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # ---------- 4. Клонировать vetvoice из GitLab ----------
-      # Используем GitLab token из секретов (нужен для private репо).
-      # Если репо публичный — токен не обязателен, но мы его добавим для надёжности.
-      - name: 📥 Clone vetvoice repo (GitLab)
-        env:
-          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+      # ---------- 4. Клонировать vetvoice из GitHub ----------
+      # GitLab-зеркало протухло (база чистилась в GitHub: Task 182/186/187,
+      # 2026-10-29) — валидировать гитлабовскую копию нельзя: отчёты врут,
+      # а drugs_calc_fixed.json-артефакт становится образом отката чистки.
+      - name: 📥 Clone vetvoice repo (GitHub)
         run: |
-          if [ -z "$GITLAB_TOKEN" ]; then
-            echo "⚠️ GITLAB_TOKEN не задан — пробую публичный клон"
-            git clone --depth 1 https://gitlab.com/shray77/vetvoice.git vetvoice_repo
-          else
-            git clone --depth 1 "https://oauth2:${GITLAB_TOKEN}@gitlab.com/shray77/vetvoice.git" vetvoice_repo
-          fi
+          git clone --depth 1 https://github.com/shray77/vetvoice.git vetvoice_repo
           ls -la vetvoice_repo/assets/data/drugs_calc.json
           echo "DRUGS_CALC_SIZE=$(wc -c < vetvoice_repo/assets/data/drugs_calc.json)" >> $GITHUB_ENV
 

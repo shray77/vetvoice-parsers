@@ -1,6 +1,6 @@
 # VetVoice Parsers & Validator
 
-Парсеры ветеринарных ресурсов и валидатор базы препаратов **vetvoice** (Flutter-приложение из репы [`shray77/vetvoice`](https://gitlab.com/shray77/vetvoice)) с учётом **видовой разницы доз**.
+Парсеры ветеринарных ресурсов и валидатор базы препаратов **vetvoice** (Flutter-приложение из репы [`shray77/vetvoice`](https://github.com/shray77/vetvoice)) с учётом **видовой разницы доз**.
 
 ## Что это
 
@@ -113,12 +113,21 @@ vetvoice-parsers/
 - 📤 **При push в main** если изменились `scripts/**` или `config.yaml`
 
 Что делает:
-1. Клонирует vetvoice из GitLab (нужен `GITLAB_TOKEN` secret для приватного доступа)
+1. Клонирует vetvoice из GitHub (`shray77/vetvoice`, main — публичный, токен не нужен)
 2. Запускает парсеры vetprotocol + vetlek
 3. Запускает валидатор
 4. Загружает артефакты: `vetprotocol.json`, `vetlek.json`, `validation_report.json`, `drugs_calc_fixed.json` (хранятся 30 дней)
 
-**Настройка:** добавь `GITLAB_TOKEN` в Settings → Secrets and variables → Actions репозитория. Без токена workflow попробует клонировать публичный вет.
+> **Источник — GitHub, не GitLab.** Гитлабовское зеркало протухло: база препаратов
+> прошла большую чистку в GitHub (дозы/концентрации/маршруты, октябрь 2026).
+> GitLab-копия — дорефакторная, качать её и заливать обратно нельзя (откат чистки).
+> Прежний `GITLAB_TOKEN` secret больше не используется и не нужен.
+
+> ⚠️ **`drugs_calc_fixed.json` — advisory-only.** Это артефакт для ручного
+> разбора расхождений, НЕ готовая база. Никогда не заливай его в vetvoice
+> вслепую: каноническая база курируется вручную и защищена гейтом
+> `scripts/validate_drug_db.py` в репозитории vetvoice (ERROR=0 обязателен).
+> Правки из артефакта вносятся по одной, с проверкой по инструкции препарата.
 
 ### `.github/workflows/ci.yml` — CI проверки
 
@@ -144,10 +153,13 @@ pip install requests beautifulsoup4 lxml pyyaml
 
 ## Использование
 
-### 1. Скачать базу vetvoice из GitLab
+### 1. Скачать базу vetvoice из GitHub
 
 ```bash
-git clone https://gitlab.com/shray77/vetvoice.git
+git clone https://github.com/shray77/vetvoice.git
+
+# или только JSON-базы (без клона):
+./scripts/download_vetvoice_jsons.sh
 ```
 
 ### 2. Проверить доступность Галена

@@ -1,13 +1,22 @@
 #!/bin/bash
-# Скачивает все JSON-файлы базы данных из репозитория vetvoice
+# Скачивает все JSON-файлы базы данных из репозитория vetvoice (GitHub, main).
+#
+# Источник — https://github.com/shray77/vetvoice (main). GitLab-зеркало
+# протухло и отключено (Task 187, 2026-10-29): база чистилась в GitHub
+# (Task 182/186/187), гитлабовская копия дорефакторная. Качать её и тем
+# более заливать обратно НЕЛЬЗЯ — откат чистки.
+#
+# Репо публичное — токен не нужен. (Прежняя версия тащила базу с GitLab
+# API по вкоммиченному PAT-токену; токен удалён из кода — отозвать на
+# стороне GitLab, если ещё жив.)
 set -e
 
-TOKEN="glpat-kYDlfx64h8YDkcA1bO_rXWM6MQpvOjEKdTprc3RjNw8.01.1719onwqm"
-PROJECT_ID="80282574"
+BRANCH="main"
+REPO="shray77/vetvoice"
+BASE_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
 OUT_DIR="/home/z/my-project/vetvoice_data"
 mkdir -p "$OUT_DIR/advanced"
 
-# URL-кодируем пути к файлам
 files=(
   "assets/data/diseases.json"
   "assets/data/dosage_database.json"
@@ -28,32 +37,19 @@ files=(
 )
 
 for f in "${files[@]}"; do
-  # URL-кодируем слэши как %2F
-  encoded=$(echo "$f" | sed 's|/|%2F|g')
   out_path="$OUT_DIR/$f"
   out_path="${out_path/assets\/data\//}"
   echo "Downloading $f -> $out_path"
-  
-  # Получаем base64-контент через API
-  resp=$(curl -s --header "PRIVATE-TOKEN: $TOKEN" \
-    "https://gitlab.com/api/v4/projects/$PROJECT_ID/repository/files/$encoded?ref=main")
-  
-  # Декодируем и сохраняем
-  echo "$resp" | python3 -c "
-import json, sys, base64
-d = json.load(sys.stdin)
-if 'content' in d:
-    sys.stdout.buffer.write(base64.b64decode(d['content']))
-else:
-    print('ERROR:', json.dumps(d, indent=2)[:300], file=sys.stderr)
-    sys.exit(1)
-" > "$out_path"
-  
-  if [ $? -eq 0 ] && [ -s "$out_path" ]; then
+
+  http_code=$(curl -sL -w '%{http_code}' -o "$out_path" "$BASE_URL/$f")
+
+  if [ "$http_code" = "200" ] && [ -s "$out_path" ]; then
     size=$(wc -c < "$out_path")
     echo "  OK, size: $size bytes"
   else
-    echo "  FAILED"
+    echo "  FAILED (HTTP $http_code)"
+    rm -f "$out_path"
+    exit 1
   fi
 done
 
