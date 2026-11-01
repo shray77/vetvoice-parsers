@@ -2,7 +2,7 @@
   "total_drugs": 2401,
   "checked_drugs": 2401,
   "matched_drugs": 2376,
-  "discrepancies_count": 1424,
+  "discrepancies_count": 1422,
   "fixed_drugs": 5,
   "sources_used": [
     "vetprotocol (1657 записей)",
@@ -10,14 +10,14 @@
     "fsvps (2347 записей)"
   ],
   "discrepancies_by_severity": {
-    "info": 522,
-    "warning": 902,
+    "info": 521,
+    "warning": 901,
     "error": 0
   },
   "discrepancies_by_field": {
     "dose_per_kg": 609,
-    "animal_specific.Собаки.dose_per_kg": 375,
-    "animals.missing.Собаки": 129,
+    "animal_specific.Собаки.dose_per_kg": 372,
+    "animals.missing.Собаки": 130,
     "animals.missing.Свиньи": 69,
     "inn": 64,
     "animal_specific.Птица.dose_per_kg": 62,
@@ -417,7 +417,8 @@
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
         "КРС",
-        "Свиньи"
+        "Свиньи",
+        "Птица"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -431,7 +432,8 @@
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
         "КРС",
-        "Свиньи"
+        "Свиньи",
+        "Птица"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -490,7 +492,9 @@
       "vetvoice_value": [
         "КРС",
         "Лошади",
-        "Свиньи"
+        "Свиньи",
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -505,7 +509,9 @@
       "vetvoice_value": [
         "КРС",
         "Лошади",
-        "Свиньи"
+        "Свиньи",
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Птица",
       "source": "vetprotocol",
@@ -1333,7 +1339,10 @@
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
         "Собаки",
-        "Кошки"
+        "Кошки",
+        "КРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -2199,7 +2208,9 @@
       "vetvoice_value": [
         "КРС",
         "Лошади",
-        "Свиньи"
+        "Свиньи",
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -2214,7 +2225,9 @@
       "vetvoice_value": [
         "КРС",
         "Лошади",
-        "Свиньи"
+        "Свиньи",
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Птица",
       "source": "vetprotocol",
@@ -2312,7 +2325,9 @@
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
         "Собаки",
-        "Кошки"
+        "Кошки",
+        "КРС",
+        "Лошади"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -3313,7 +3328,10 @@
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
         "Свиньи",
-        "Птица"
+        "Птица",
+        "КРС",
+        "Кролики",
+        "Пушные звери"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -3639,7 +3657,8 @@
       "drug_name": "Азинокс плюс",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -3652,7 +3671,8 @@
       "drug_name": "Азинокс плюс",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -3860,7 +3880,11 @@
       "drug_name": "ГЕЛЬМИЦИД® суспензия",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "Птица"
+        "Птица",
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -3918,7 +3942,10 @@
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
         "Собаки",
-        "Кошки"
+        "Кошки",
+        "КРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -3932,7 +3959,10 @@
       "field": "animals.missing.Птица",
       "vetvoice_value": [
         "Собаки",
-        "Кошки"
+        "Кошки",
+        "КРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Птица",
       "source": "vetprotocol",
@@ -4425,7 +4455,8 @@
       "drug_name": "Эндометрамаг-Т®",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "КРС"
+        "КРС",
+        "Птица"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -4449,7 +4480,11 @@
       "drug_name": "Эндометрамаг-К®",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "КРС"
+        "КРС",
+        "Свиньи",
+        "Птица",
+        "Кролики",
+        "Пушные звери"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -4494,23 +4529,12 @@
       "drug_id": 576,
       "drug_name": "Ациломаг®",
       "field": "dose_per_kg",
-      "vetvoice_value": 10,
+      "vetvoice_value": 5.0,
       "source_value": 15.0,
       "source": "vetprotocol",
       "severity": "warning",
       "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 576,
-      "drug_name": "Ациломаг®",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
+      "notes": "Расхождение в дозе: vetvoice=5.0, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
       "drug_id": 579,
@@ -4781,7 +4805,10 @@
       "vetvoice_value": [
         "Свиньи",
         "Птица",
-        "Кошки"
+        "Кошки",
+        "КРС",
+        "Кролики",
+        "Пушные звери"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -4838,7 +4865,8 @@
       "drug_name": "Дронтал® плюс",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -4851,7 +4879,8 @@
       "drug_name": "Дронтал® плюс",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -4952,7 +4981,8 @@
       "drug_name": "Дронтал®",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Кошки"
+        "Кошки",
+        "Собаки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -4965,7 +4995,8 @@
       "drug_name": "Дронтал®",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Кошки"
+        "Кошки",
+        "Собаки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -5231,7 +5262,11 @@
       "drug_name": "Мелоксидил®",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки",
+        "КРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -5244,7 +5279,11 @@
       "drug_name": "Мелоксидил®",
       "field": "animals.missing.Птица",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки",
+        "КРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Птица",
       "source": "vetprotocol",
@@ -5325,7 +5364,9 @@
       "vetvoice_value": [
         "КРС",
         "Лошади",
-        "Свиньи"
+        "Свиньи",
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -5340,7 +5381,9 @@
       "vetvoice_value": [
         "КРС",
         "Лошади",
-        "Свиньи"
+        "Свиньи",
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Птица",
       "source": "vetprotocol",
@@ -5596,7 +5639,11 @@
       "drug_name": "НЕОКОЛ ВС",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "Птица"
+        "Птица",
+        "КРС",
+        "Свиньи",
+        "Кролики",
+        "Пушные звери"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -5770,7 +5817,8 @@
       "drug_name": "Празицид®-суспензия НЕО",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -5783,7 +5831,8 @@
       "drug_name": "Празицид®-суспензия НЕО",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -5829,7 +5878,8 @@
       "drug_name": "РольфКлуб 3D ушные капли",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Птица"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -5911,7 +5961,10 @@
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
         "КРС",
-        "Свиньи"
+        "Свиньи",
+        "Собаки",
+        "Кошки",
+        "Лошади"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -5925,7 +5978,10 @@
       "field": "animals.missing.Птица",
       "vetvoice_value": [
         "КРС",
-        "Свиньи"
+        "Свиньи",
+        "Собаки",
+        "Кошки",
+        "Лошади"
       ],
       "source_value": "Птица",
       "source": "vetprotocol",
@@ -6149,7 +6205,10 @@
       "drug_name": "Альбендазол 10%",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "КРС"
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -6174,7 +6233,9 @@
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
         "КРС",
-        "Свиньи"
+        "Свиньи",
+        "МРС",
+        "Лошади"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -6265,7 +6326,8 @@
       "vetvoice_value": [
         "КРС",
         "МРС",
-        "Свиньи"
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -6358,7 +6420,11 @@
       "drug_name": "Альбендазол 200",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "Птица"
+        "Птица",
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -7078,7 +7144,11 @@
       "drug_name": "Альбендазол 10%",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "Птица"
+        "Птица",
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -7179,7 +7249,8 @@
       "drug_name": "Празител® Особый суспензия",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -7192,7 +7263,8 @@
       "drug_name": "Празител® Особый суспензия",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -7950,7 +8022,8 @@
       "drug_name": "Глистогон Плюс суспензия",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -7963,7 +8036,8 @@
       "drug_name": "Глистогон Плюс суспензия",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -8427,7 +8501,8 @@
       "drug_name": "Вермидин® таблетки",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -8440,7 +8515,8 @@
       "drug_name": "Вермидин® таблетки",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -8668,7 +8744,8 @@
       "drug_name": "Метровит",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "КРС"
+        "КРС",
+        "Птица"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -8919,7 +8996,10 @@
       "drug_name": "ГЕЛЬМИЦИД® гранулы",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "КРС"
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -9086,7 +9166,8 @@
       "drug_name": "Празицид® таблетки",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -9099,7 +9180,8 @@
       "drug_name": "Празицид® таблетки",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -9816,7 +9898,8 @@
       "drug_name": "Неофлокс таблетки",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Птица"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -9986,7 +10069,8 @@
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
         "КРС",
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -10000,7 +10084,8 @@
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
         "КРС",
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -10046,7 +10131,10 @@
       "drug_name": "Альбендазол 10%",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "КРС"
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -10291,7 +10379,8 @@
       "drug_name": "Празител® плюс таблетки",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -10304,7 +10393,8 @@
       "drug_name": "Празител® плюс таблетки",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -10887,7 +10977,8 @@
       "drug_name": "Чистотел глистогон",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -10900,7 +10991,8 @@
       "drug_name": "Чистотел глистогон",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -10923,23 +11015,23 @@
       "drug_id": 1477,
       "drug_name": "Гельминтал С",
       "field": "dose_per_kg",
-      "vetvoice_value": 0.03,
+      "vetvoice_value": 0.1,
       "source_value": 5.0,
       "source": "vetprotocol",
       "severity": "warning",
       "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=0.03, vetprotocol=5.0 для Собаки — требуется ручная проверка"
+      "notes": "Расхождение в дозе: vetvoice=0.1, vetprotocol=5.0 для Собаки — требуется ручная проверка"
     },
     {
       "drug_id": 1477,
       "drug_name": "Гельминтал С",
       "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 0.025,
+      "vetvoice_value": 0.1,
       "source_value": 75.0,
       "source": "vetprotocol",
       "severity": "warning",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=0.025, vetprotocol=75.0 — требуется ручная проверка"
+      "notes": "Расхождение для Собаки: vetvoice=0.1, vetprotocol=75.0 — требуется ручная проверка"
     },
     {
       "drug_id": 1484,
@@ -10989,23 +11081,25 @@
       "drug_id": 1489,
       "drug_name": "Гельминтал К",
       "field": "dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 25.0,
+      "vetvoice_value": 0.1,
+      "source_value": 5.0,
       "source": "vetprotocol",
       "severity": "warning",
       "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=5, vetprotocol=25.0 для Собаки — требуется ручная проверка"
+      "notes": "Расхождение в дозе: vetvoice=0.1, vetprotocol=5.0 для Собаки — требуется ручная проверка"
     },
     {
       "drug_id": 1489,
       "drug_name": "Гельминтал К",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 5,
-      "source_value": 75.0,
+      "field": "animals.missing.Собаки",
+      "vetvoice_value": [
+        "Кошки"
+      ],
+      "source_value": "Собаки",
       "source": "vetprotocol",
-      "severity": "warning",
+      "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=5, vetprotocol=75.0 — требуется ручная проверка"
+      "notes": "vetprotocol знает дозу для Собаки (75.0 мг/кг), но в vetvoice.animals этого вида нет."
     },
     {
       "drug_id": 1492,
@@ -11111,7 +11205,10 @@
       "drug_name": "Оксибактоцид® пластины",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Пчёлы"
+        "Пчёлы",
+        "Птица",
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -11135,7 +11232,10 @@
       "drug_name": "Оксибактоцид® порошок",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Пчёлы"
+        "Пчёлы",
+        "Птица",
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -11900,7 +12000,8 @@
       "drug_name": "Энрофлон® таблетки пенообразующие",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "КРС"
+        "КРС",
+        "Птица"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -11924,7 +12025,8 @@
       "drug_name": "Энрофлон® таблетки пенообразующие",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "КРС"
+        "КРС",
+        "Птица"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -11959,7 +12061,10 @@
       "drug_name": "ГЕЛЬМИЦИД® таблетки",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "КРС"
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -12182,7 +12287,8 @@
       "vetvoice_value": [
         "КРС",
         "Свиньи",
-        "Птица"
+        "Птица",
+        "Собаки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -12802,23 +12908,12 @@
       "drug_id": 1750,
       "drug_name": "Энромай",
       "field": "dose_per_kg",
-      "vetvoice_value": 10,
+      "vetvoice_value": 5.0,
       "source_value": 15.0,
       "source": "vetprotocol",
       "severity": "warning",
       "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
-    },
-    {
-      "drug_id": 1750,
-      "drug_name": "Энромай",
-      "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
-      "source_value": 150.0,
-      "source": "vetprotocol",
-      "severity": "info",
-      "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
+      "notes": "Расхождение в дозе: vetvoice=5.0, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
       "drug_id": 1751,
@@ -12971,7 +13066,11 @@
       "drug_name": "Колифур",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "Свиньи"
+        "Свиньи",
+        "КРС",
+        "Птица",
+        "Кролики",
+        "Пушные звери"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -13880,7 +13979,10 @@
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
         "Свиньи",
-        "Птица"
+        "Птица",
+        "КРС",
+        "Кролики",
+        "Пушные звери"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -13997,7 +14099,8 @@
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
         "КРС",
-        "Свиньи"
+        "Свиньи",
+        "Птица"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -14203,7 +14306,9 @@
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
         "КРС",
-        "МРС"
+        "МРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -14365,7 +14470,8 @@
       "drug_name": "Дехинел® Плюс",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -14378,7 +14484,8 @@
       "drug_name": "Дехинел® Плюс",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -14413,7 +14520,8 @@
       "drug_name": "Дехинел ® Плюс таблетки со вкусом мяса",
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -14426,7 +14534,8 @@
       "drug_name": "Дехинел ® Плюс таблетки со вкусом мяса",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -14787,23 +14896,23 @@
       "drug_id": 2093,
       "drug_name": "Энромокс®",
       "field": "dose_per_kg",
-      "vetvoice_value": 10,
+      "vetvoice_value": 5.0,
       "source_value": 15.0,
       "source": "vetprotocol",
       "severity": "warning",
       "suggested_fix": null,
-      "notes": "Расхождение в дозе: vetvoice=10, vetprotocol=15.0 для Собаки — требуется ручная проверка"
+      "notes": "Расхождение в дозе: vetvoice=5.0, vetprotocol=15.0 для Собаки — требуется ручная проверка"
     },
     {
       "drug_id": 2093,
       "drug_name": "Энромокс®",
       "field": "animal_specific.Собаки.dose_per_kg",
-      "vetvoice_value": 15,
+      "vetvoice_value": 5.0,
       "source_value": 150.0,
       "source": "vetprotocol",
       "severity": "info",
       "suggested_fix": null,
-      "notes": "Расхождение для Собаки: vetvoice=15, vetprotocol=150.0 — требуется ручная проверка"
+      "notes": "Расхождение для Собаки: vetvoice=5.0, vetprotocol=150.0 — требуется ручная проверка"
     },
     {
       "drug_id": 2095,
@@ -14870,7 +14979,10 @@
       "field": "animals.missing.Кролики",
       "vetvoice_value": [
         "Собаки",
-        "Кошки"
+        "Кошки",
+        "КРС",
+        "МРС",
+        "Лошади"
       ],
       "source_value": "Кролики",
       "source": "vetprotocol",
@@ -14884,7 +14996,10 @@
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
         "Собаки",
-        "Кошки"
+        "Кошки",
+        "КРС",
+        "МРС",
+        "Лошади"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -15406,7 +15521,8 @@
       "drug_name": "Тилозинокар",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "КРС"
+        "КРС",
+        "Птица"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -15530,7 +15646,10 @@
       "drug_name": "Фебрин Порцино",
       "field": "animals.missing.Птица",
       "vetvoice_value": [
-        "Свиньи"
+        "Свиньи",
+        "Собаки",
+        "Кошки",
+        "Лошади"
       ],
       "source_value": "Птица",
       "source": "vetprotocol",
@@ -15931,7 +16050,8 @@
       "drug_name": "Амит форте",
       "field": "animals.missing.Свиньи",
       "vetvoice_value": [
-        "Собаки"
+        "Собаки",
+        "Кошки"
       ],
       "source_value": "Свиньи",
       "source": "vetprotocol",
@@ -16201,7 +16321,10 @@
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
         "Свиньи",
-        "Птица"
+        "Птица",
+        "КРС",
+        "Кролики",
+        "Пушные звери"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
@@ -16341,7 +16464,10 @@
       "drug_name": "Синвермин",
       "field": "animals.missing.Собаки",
       "vetvoice_value": [
-        "КРС"
+        "КРС",
+        "МРС",
+        "Свиньи",
+        "Лошади"
       ],
       "source_value": "Собаки",
       "source": "vetprotocol",
