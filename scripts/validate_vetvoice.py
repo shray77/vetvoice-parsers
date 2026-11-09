@@ -32,6 +32,7 @@ import logging
 import re
 import sys
 from dataclasses import dataclass, field, asdict
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -129,6 +130,83 @@ def normalize_name(s: str) -> str:
         s = re.sub(rf"\b{w}\b", "", s)
     s = _WS_RE.sub(" ", s).strip()
     return s
+
+
+# ── Канонизация МНН (Task 229: точный матчинг вместо косметических сносок) ─
+# Косметика, НЕ меняющая препарат: порядок компонентов в комбинации
+# («триметоприм, сульфадиазин» = «сульфадиазин, триметоприм»), солевые
+# суффиксы («неомицина сульфат» = «неомицин»), регистр/ё/пунктуация,
+# концентрации в строке МНН («тилмикозин 25%» = «тилмикозин»).
+# Плейсхолдеры реестра («#####», «отсутствует») не сравниваются вовсе.
+# Разное число компонентов — всегда разные препараты: амоксициллин и
+# амоксициллин+клавулановая кислота НЕ эквивалентны.
+
+_INN_PLACEHOLDER_RE = re.compile(
+    r"^[\s#№\-—.]*$|отсутствует|не указан|нет данных|н/д", re.I)
+_INN_SALT_WORDS = frozenset({
+    "сульфат", "гидрохлорид", "дигидрохлорид", "гидробромид", "гидрат",
+    "дигидрат", "моногидрат", "ацетат", "цитрат", "тартрат", "малеат",
+    "фумарат", "сукцинат", "хлорид", "бромид", "йодид", "нитрат",
+    "фосфат", "лактат", "бензоат", "пантотенат", "натрия", "калия",
+})
+_INN_NUMERIC_RE = re.compile(r"^\d+(?:[.,]\d+)?%?$")
+
+
+def _inn_tokens(s: str) -> Optional[frozenset]:
+    """Множество токенов МНН (без солей/концентраций); None = плейсхолдер."""
+    if not s or not s.strip():
+        return None
+    if _INN_PLACEHOLDER_RE.search(s):
+        return None
+    t = s.lower().replace("ё", "е")
+    t = re.sub(r"[®™]", "", t)
+    t = _PUNCT_RE.sub(" ", t)
+    tokens = [w for w in _WS_RE.split(t) if w]
+    tokens = [w for w in tokens if not _INN_NUMERIC_RE.match(w)]
+    stripped = [w for w in tokens if w not in _INN_SALT_WORDS]
+    return frozenset(stripped if stripped else tokens)
+
+
+def _token_similar(a: str, b: str) -> bool:
+    """Нечёткое равенство токена: падежные окончания (неомицина/неомицин).
+
+    Порог 0.9: одно-символьная опечатка в коротком слове («Dакцина» против
+    «Вакцина», ratio≈0.86) остаётся РАСХОЖДЕНИЕМ — это сигнал, а не косметика.
+    """
+    if a == b:
+        return True
+    if abs(len(a) - len(b)) > 3:
+        return False
+    return SequenceMatcher(None, a, b).ratio() >= 0.9
+
+
+def compare_inn(vv: str, src: str) -> str:
+    """'equal' | 'diff' | 'skip' — сравнение МНН канона и источника."""
+    ta, tb = _inn_tokens(vv), _inn_tokens(src)
+    if ta is None or tb is None:
+        return "skip"  # пусто или плейсхолдер реестра — не расхождение
+    if len(ta) != len(tb):
+        return "diff"  # комбо против моно — разные препараты
+    used: set = set()
+    for x in ta:
+        j = next((i for i, y in enumerate(tb)
+                  if i not in used and _token_similar(x, y)), None)
+        if j is None:
+            return "diff"
+        used.add(j)
+    return "equal"
+
+
+def _combo_mismatch(key: str, other: str) -> bool:
+    """key и other — препараты с разным числом компонентов (комбо против моно).
+
+    Виновник ложных fuzzy-матчей: моно «амоксициллин» ловился подстрокой в
+    комбо «амоксициллин, клавулановая кислота» — это разные препараты.
+    """
+    ka, kb = _inn_tokens(key), _inn_tokens(other)
+    if ka is None or kb is None or len(ka) == len(kb):
+        return False
+    return ka <= kb or kb <= ka
 
 
 def extract_dose_numbers(text: str) -> List[float]:
@@ -241,6 +319,8 @@ def find_in_fsvps(
             continue
         for k, v in idx.items():
             if (key in k or k in key) and len(k) > 4:
+                if _combo_mismatch(key, k):
+                    continue  # комбо против моно — разные препараты
                 return v
     return None
 
@@ -264,6 +344,8 @@ def find_in_vetprotocol(
             if k.startswith("slug:") or k.startswith("id:"):
                 continue
             if key and (key in k or k in key) and len(key) > 3:
+                if _combo_mismatch(key, k):
+                    continue  # комбо против моно — разные препараты
                 return v
     return None
 
@@ -287,6 +369,8 @@ def find_in_vetlek(
             if k.startswith("id:"):
                 continue
             if key and (key in k or k in key) and len(key) > 4:
+                if _combo_mismatch(key, k):
+                    continue  # комбо против моно — разные препараты
                 return v
     return None
 
@@ -950,24 +1034,24 @@ def check_fsvps(
     if not fsvps_drug:
         return
 
-    # 1. МНН
+    # 1. МНН (Task 229: каноничное сравнение — порядок компонентов, соли,
+    #    регистр/ё не считаются расхождением; плейсхолдеры реестра пропускаются;
+    #    разное число компонентов — всегда расхождение: комбо ≠ моно)
     vv_inn = vv_drug.get("inn", "")
     fsvps_inn = fsvps_drug.get("inn", "")
-    if vv_inn and fsvps_inn and vv_inn.lower().strip() != fsvps_inn.lower().strip():
-        # МНН различается — возможно, разные формы или ошибка
+    if compare_inn(vv_inn, fsvps_inn) == "diff":
         # Не предлагаем fix, только warning
-        if normalize_name(vv_inn) != normalize_name(fsvps_inn):
-            discrepancies.append(Discrepancy(
-                drug_id=drug_id, drug_name=drug_name,
-                field="inn",
-                vetvoice_value=vv_inn,
-                source_value=fsvps_inn,
-                source="fsvps",
-                severity="info",
-                suggested_fix=None,
-                notes=f"МНН различается: vetvoice='{vv_inn[:50]}', "
-                      f"fsvps='{fsvps_inn[:50]}' — возможна ошибка",
-            ))
+        discrepancies.append(Discrepancy(
+            drug_id=drug_id, drug_name=drug_name,
+            field="inn",
+            vetvoice_value=vv_inn,
+            source_value=fsvps_inn,
+            source="fsvps",
+            severity="info",
+            suggested_fix=None,
+            notes=f"МНН различается: vetvoice='{vv_inn[:50]}', "
+                  f"fsvps='{fsvps_inn[:50]}' — возможна ошибка",
+        ))
 
     # 2. Лекарственная форма — если в vetvoice пусто, заполним из fsvps
     vv_form = vv_drug.get("form", "")
