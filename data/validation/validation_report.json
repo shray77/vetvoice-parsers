@@ -2,8 +2,8 @@
   "total_drugs": 2401,
   "checked_drugs": 2401,
   "matched_drugs": 2365,
-  "discrepancies_count": 93,
-  "fixed_drugs": 2,
+  "discrepancies_count": 90,
+  "fixed_drugs": 0,
   "sources_used": [
     "vetprotocol (0 записей)",
     "vetlek (398 записей)",
@@ -12,13 +12,11 @@
   "discrepancies_by_severity": {
     "info": 70,
     "warning": 20,
-    "error": 3
+    "error": 0
   },
   "discrepancies_by_field": {
     "inn": 70,
-    "animal_specific.missing": 20,
-    "contraindications.pregnancy": 2,
-    "contraindications.lactation": 1
+    "animal_specific.missing": 20
   },
   "discrepancies": [
     {
@@ -194,17 +192,6 @@
       "severity": "info",
       "suggested_fix": null,
       "notes": "МНН различается: vetvoice='Вакцина против инфекционного ринотрахеита, калицив', fsvps='Вакцина против панлейкопении, инфекционного ринотр' — возможна ошибка"
-    },
-    {
-      "drug_id": 986,
-      "drug_name": "Пуревакс RCP Rabies",
-      "field": "contraindications.pregnancy",
-      "vetvoice_value": false,
-      "source_value": true,
-      "source": "fsvps",
-      "severity": "error",
-      "suggested_fix": true,
-      "notes": "fsvps (госреестр) прямо указывает противопоказание при беременности, vetvoice — нет"
     },
     {
       "drug_id": 996,
@@ -900,28 +887,6 @@
       "severity": "info",
       "suggested_fix": null,
       "notes": "МНН различается: vetvoice='не присвоено', fsvps='полисахариды побегов Solanum tuberosum' — возможна ошибка"
-    },
-    {
-      "drug_id": 2070,
-      "drug_name": "Форвет®",
-      "field": "contraindications.pregnancy",
-      "vetvoice_value": false,
-      "source_value": true,
-      "source": "fsvps",
-      "severity": "error",
-      "suggested_fix": true,
-      "notes": "fsvps (госреестр) прямо указывает противопоказание при беременности, vetvoice — нет"
-    },
-    {
-      "drug_id": 2070,
-      "drug_name": "Форвет®",
-      "field": "contraindications.lactation",
-      "vetvoice_value": false,
-      "source_value": true,
-      "source": "fsvps",
-      "severity": "error",
-      "suggested_fix": true,
-      "notes": "fsvps (госреестр) прямо указывает противопоказание при лактации, vetvoice — нет"
     },
     {
       "drug_id": 2090,
